@@ -1,20 +1,13 @@
 "use client";
 
 import { motion } from "framer-motion";
-import {
-  MapPin,
-  MessageCircle,
-  Recycle,
-  Palette,
-  Bot,
-  Star,
-} from "lucide-react";
+import { MapPin, Recycle, Palette } from "lucide-react";
 
-export function FeaturesSection() {
+export function UserSection() {
   const features = [
     {
       icon: MapPin,
-      title: "Lokasi Real-time",
+      title: "Penguna",
       description:
         "Temukan pengepul dan pengrajin terdekat dengan sistem GPS terintegrasi",
     },
@@ -30,24 +23,6 @@ export function FeaturesSection() {
       description:
         "Pesan kerajinan custom dari bahan daur ulang dengan pengrajin berpengalaman",
     },
-    {
-      icon: MessageCircle,
-      title: "Chat Real-time",
-      description:
-        "Komunikasi langsung dengan pengepul dan pengrajin untuk kesepakatan terbaik",
-    },
-    {
-      icon: Bot,
-      title: "AI Assistant",
-      description:
-        "Chatbot cerdas untuk rekomendasi pengepul dan pengrajin sesuai kebutuhan",
-    },
-    {
-      icon: Star,
-      title: "Rating & Review",
-      description:
-        "Sistem penilaian transparan untuk menjamin kualitas layanan terbaik",
-    },
   ];
 
   return (
@@ -60,15 +35,17 @@ export function FeaturesSection() {
           className="text-center mb-16"
         >
           <h2 className="text-4xl lg:text-5xl font-bold text-[#2C2C2C] mb-6">
-            Fitur
+            Siapa
             <span className="bg-gradient-to-r from-[#B7410E] to-[#D4651F] bg-clip-text text-transparent">
               {" "}
-              Unggulan
+              Pengguna{" "}
             </span>
+            Kami?
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Teknologi terdepan untuk menciptakan ekosistem green business yang
-            berkelanjutan
+            Platform kami melayani tiga jenis pengguna utama: masyarakat umum,
+            pengepul sampah, dan pengrajin. Setiap pengguna memiliki peran
+            penting dalam menciptakan ekosistem daur ulang yang berkelanjutan.
           </p>
         </motion.div>
 
