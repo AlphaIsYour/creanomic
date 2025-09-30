@@ -1,11 +1,8 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import { signOut } from "next-auth/react";
 import {
   User,
-  Settings,
-  LogOut,
   Edit3,
   Bell,
   Shield,
@@ -32,10 +29,6 @@ interface ProfilePopupProps {
 }
 
 export function ProfilePopup({ isOpen, onClose, user }: ProfilePopupProps) {
-  const handleLogout = async () => {
-    await signOut({ callbackUrl: "/" });
-  };
-
   const handleMenuClick = (action: string) => {
     // TODO: Implement navigation logic
     console.log("Profile action:", action);
@@ -182,19 +175,6 @@ export function ProfilePopup({ isOpen, onClose, user }: ProfilePopupProps) {
               </button>
 
               <button
-                onClick={() => handleMenuClick("settings")}
-                className="w-full flex items-center space-x-3 px-6 py-3 hover:bg-gray-50 transition-colors text-left"
-              >
-                <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-                  <Settings className="w-4 h-4 text-purple-600" />
-                </div>
-                <div>
-                  <p className="font-medium text-gray-800">Pengaturan</p>
-                  <p className="text-sm text-gray-500">Preferensi & privasi</p>
-                </div>
-              </button>
-
-              <button
                 onClick={() => handleMenuClick("security")}
                 className="w-full flex items-center space-x-3 px-6 py-3 hover:bg-gray-50 transition-colors text-left"
               >
@@ -220,17 +200,6 @@ export function ProfilePopup({ isOpen, onClose, user }: ProfilePopupProps) {
                   <p className="font-medium text-gray-800">Bantuan</p>
                   <p className="text-sm text-gray-500">FAQ & dukungan</p>
                 </div>
-              </button>
-            </div>
-
-            {/* Logout Button */}
-            <div className="p-4 border-t border-gray-100">
-              <button
-                onClick={handleLogout}
-                className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-red-50 text-red-600 hover:bg-red-100 rounded-xl transition-colors"
-              >
-                <LogOut className="w-4 h-4" />
-                <span className="font-medium">Keluar</span>
               </button>
             </div>
           </motion.div>

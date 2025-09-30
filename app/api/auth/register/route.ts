@@ -1,62 +1,78 @@
 import { NextRequest, NextResponse } from "next/server";
-import bcryptjs from "bcryptjs";
 import { prisma } from "@/lib/prisma";
+import bcrypt from "bcryptjs";
 
-export async function POST(request: NextRequest) {
+export async function POST(req: NextRequest) {
   try {
-    const { name, email, password, role } = await request.json();
+    const { email, otp, name, password } = await req.json();
 
-    // Validation
-    if (!name || !email || !password) {
+    // Verify OTP one more time
+    const verificationToken = await prisma.verificationToken.findUnique({
+      where: {
+        identifier_token: {
+          identifier: email,
+          token: otp,
+        },
+      },
+    });
+
+    if (!verificationToken || new Date() > verificationToken.expires) {
       return NextResponse.json(
-        { error: "Name, email, and password are required" },
+        { error: "Kode OTP tidak valid atau kadaluarsa" },
         { status: 400 }
       );
     }
 
-    // Check if user already exists
+    // Check if user exists
     const existingUser = await prisma.user.findUnique({
       where: { email },
     });
 
     if (existingUser) {
       return NextResponse.json(
-        { error: "User with this email already exists" },
+        { error: "Email sudah terdaftar" },
         { status: 400 }
       );
     }
 
     // Hash password
-    const hashedPassword = await bcryptjs.hash(password, 12);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     // Create user
     const user = await prisma.user.create({
       data: {
-        name,
         email,
+        name,
         password: hashedPassword,
-        role: role || "USER",
-      },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-        createdAt: true,
+        role: "USER",
+        emailVerified: new Date(),
+        isVerified: true,
       },
     });
 
-    return NextResponse.json(
-      {
-        message: "User created successfully",
-        user,
+    // Delete used OTP
+    await prisma.verificationToken.delete({
+      where: {
+        identifier_token: {
+          identifier: email,
+          token: otp,
+        },
       },
-      { status: 201 }
-    );
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: "Registrasi berhasil",
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+      },
+    });
   } catch (error) {
     console.error("Registration error:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: "Gagal melakukan registrasi" },
       { status: 500 }
     );
   }

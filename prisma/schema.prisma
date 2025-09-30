@@ -35,10 +35,14 @@ model Session {
 }
 
 model VerificationToken {
-  identifier String
-  token      String   @unique
+  identifier String   
+  token      String   @unique 
   expires    DateTime
+  type       String   @default("EMAIL_VERIFICATION")
+  createdAt  DateTime @default(now())
+  
   @@unique([identifier, token])
+  @@index([identifier, type])
 }
 
 enum UserRole {
@@ -63,6 +67,13 @@ enum MaterialType {
   ELECTRONIC
   ORGANIC
   OTHER
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  REVISION_NEEDED
 }
 
 model User {
@@ -96,6 +107,9 @@ model User {
   notifications    Notification[]
   craftRequests    CraftRequest[]
   chatbotConversations ChatbotConversation[]
+  approvedPengepul     PengepulProfile[] @relation("ApprovedBy")
+  approvedPengrajin    PengrajinProfile[] @relation("ApprovedBy")
+  
   @@map("users")
   @@index([email])
   @@index([role])
@@ -113,17 +127,29 @@ model PengepulProfile {
   website           String?
   workingHours      String?
   totalReviews      Int            @default(0)
+  averageRating     Float?         @default(0)
+  
+  // Fields for approval system
+  approvalStatus    ApprovalStatus @default(PENDING)
+  whatsappNumber    String?
+  verificationDocs  String[]       // URLs to uploaded documents (KTP, License, etc)
+  rejectionReason   String?        @db.Text
+  submittedAt       DateTime       @default(now()) // When user submitted registration
+  approvedAt        DateTime?
+  approvedById      String?
+  approvedBy        User?          @relation("ApprovedBy", fields: [approvedById], references: [id])
+  
   createdAt         DateTime       @default(now())
   updatedAt         DateTime       @updatedAt
   user              User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   takenPosts        Post[]         
   transactions      Transaction[]  @relation("TransactionPengepul")
   reviews           Review[]
-  
-  averageRating Float? @default(0)
 
   @@map("pengepul_profiles")
   @@index([userId])
+  @@index([approvalStatus])
+  @@index([approvedAt])
 }
 
 model PengrajinProfile {
@@ -131,10 +157,23 @@ model PengrajinProfile {
   userId        String         @unique
   craftType     String[]       
   materials     MaterialType[] 
-  portfolio     String[]       
+  portfolio     String[]       // URLs to portfolio images
   priceRange    String?        
   description   String?        @db.Text
   totalReviews  Int            @default(0)
+  averageRating Float?         @default(0)
+  instagramHandle String?      // Added for social media
+  whatsappNumber  String?      // Added for contact
+  
+  // Fields for approval system
+  approvalStatus    ApprovalStatus @default(PENDING)
+  verificationDocs  String[]       // URLs to uploaded documents (KTP, certificates, etc)
+  rejectionReason   String?        @db.Text
+  submittedAt       DateTime       @default(now()) // When user submitted registration
+  approvedAt        DateTime?
+  approvedById      String?
+  approvedBy        User?          @relation("ApprovedBy", fields: [approvedById], references: [id])
+  
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
   user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -142,10 +181,10 @@ model PengrajinProfile {
   transactions  Transaction[]  @relation("TransactionPengrajin")
   reviews       Review[]
   
-  averageRating Float? @default(0)
-  
   @@map("pengrajin_profiles")
   @@index([userId])
+  @@index([approvalStatus])
+  @@index([approvedAt])
 }
 
 model Post {
@@ -332,7 +371,8 @@ enum NotificationType {
   POST_TAKEN      
   REQUEST_ACCEPTED 
   CHAT_MESSAGE   
-  TRANSACTION_UPDATE 
+  TRANSACTION_UPDATE
+  APPROVAL_STATUS
   GENERAL         
 }
 

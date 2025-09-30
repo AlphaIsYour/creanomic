@@ -108,7 +108,7 @@ export function FloatingHeader({
           {/* Search Bar - Smaller */}
           <div className="flex-1 relative">
             <div
-              className={`flex items-center bg-white rounded-lg shadow-sm border-2 transition-all duration-200 ${
+              className={`flex items-center bg-white rounded-[13px] shadow-sm border-2 transition-all duration-200 ${
                 isSearchFocused
                   ? "border-[#8C1007] shadow-md"
                   : "border-transparent"
