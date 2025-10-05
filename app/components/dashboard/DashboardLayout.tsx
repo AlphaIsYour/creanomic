@@ -1,11 +1,18 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import { useSession } from "next-auth/react";
 import { useState } from "react";
-import { MapContainer } from "@/app/components/dashboard/components/MapContainer";
+import dynamic from "next/dynamic";
 import { FloatingHeader } from "@/app/components/dashboard/components/FloatingHeader";
 import { SidebarPopup } from "@/app/components/dashboard/components/SidebarPopup";
 import { ProfilePopup } from "@/app/components/dashboard/components/ProfilePopup";
+
+// Dynamic import MapDisplay with SSR disabled
+const MapDisplay = dynamic(
+  () => import("@/app/components/dashboard/components/MapDisplay"),
+  { ssr: false }
+);
 
 export function DashboardLayout() {
   const { data: session } = useSession();
@@ -16,13 +23,11 @@ export function DashboardLayout() {
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
-    // TODO: Implement search logic
     console.log("Searching for:", query);
   };
 
   const handleFilter = (filters: string[]) => {
     setActiveFilters(filters);
-    // TODO: Implement filter logic
     console.log("Active filters:", filters);
   };
 
@@ -37,7 +42,7 @@ export function DashboardLayout() {
   return (
     <div className="relative h-screen w-full bg-gray-100 overflow-hidden">
       {/* Full Screen Map */}
-      <MapContainer searchQuery={searchQuery} activeFilters={activeFilters} />
+      <MapDisplay />
 
       {/* Floating Header */}
       <FloatingHeader
@@ -65,3 +70,6 @@ export function DashboardLayout() {
     </div>
   );
 }
+
+// Default export untuk compatibility
+export default DashboardLayout;

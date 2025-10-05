@@ -34,7 +34,6 @@ export async function POST(request: Request) {
       craftType,
       materials,
       portfolio,
-      priceRange,
       description,
       verificationDocs,
       address,
@@ -68,10 +67,9 @@ export async function POST(request: Request) {
     const pengrajinProfile = await prisma.pengrajinProfile.create({
       data: {
         userId: user.id,
-        craftType,
-        materials: materials as MaterialType[],
+        craftTypes: craftType,
+        specializedMaterials: materials as MaterialType[],
         portfolio: portfolio || [],
-        priceRange,
         description,
         verificationDocs: verificationDocs || [],
         approvalStatus: "PENDING",

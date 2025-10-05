@@ -20,13 +20,15 @@ export default function LeafletMap({
     if (!mapRef.current || mapInstanceRef.current) return;
 
     // Initialize map
-    const map = L.map(mapRef.current).setView([-7.2575, 112.7521], 13); // Surabaya coordinates
+    const map = L.map(mapRef.current).setView(
+      [-7.952827685032622, 112.61352408277247],
+      10
+    ); // Surabaya coordinates
 
     // Add tile layer
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution:
-        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-    }).addTo(map);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {}).addTo(
+      map
+    );
 
     // Custom marker icons
     const createCustomIcon = (color: string) => {

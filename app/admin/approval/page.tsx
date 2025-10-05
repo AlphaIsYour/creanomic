@@ -377,6 +377,7 @@ export default function ApprovalPage() {
                         width={400}
                         height={160}
                         className="w-full h-40 object-cover"
+                        unoptimized
                       />
                       <div className="p-2 text-xs text-center bg-gray-50">
                         Dokumen {idx + 1}
@@ -408,6 +409,7 @@ export default function ApprovalPage() {
                             width={300}
                             height={128}
                             className="w-full h-32 object-cover"
+                            unoptimized
                           />
                         </a>
                       ))}

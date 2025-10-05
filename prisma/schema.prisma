@@ -1,3 +1,4 @@
+// Creanomic - Improved Schema
 generator client {
   provider = "prisma-client-js"
 }
@@ -6,6 +7,7 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
 
 model Account {
   id                String  @id @default(cuid())
@@ -45,18 +47,12 @@ model VerificationToken {
   @@index([identifier, type])
 }
 
+
 enum UserRole {
+  ADMIN
   USER
   PENGEPUL
   PENGRAJIN
-  ADMIN
-}
-
-enum PostStatus {
-  ACTIVE
-  TAKEN
-  COMPLETED
-  CANCELLED
 }
 
 enum MaterialType {
@@ -64,7 +60,11 @@ enum MaterialType {
   GLASS
   METAL
   PAPER
+  CARDBOARD
   ELECTRONIC
+  TEXTILE
+  WOOD
+  RUBBER
   ORGANIC
   OTHER
 }
@@ -75,6 +75,83 @@ enum ApprovalStatus {
   REJECTED
   REVISION_NEEDED
 }
+
+enum OfferType {
+  SELL     
+  DONATE 
+}
+
+enum OfferStatus {
+  AVAILABLE
+  RESERVED
+  TAKEN
+  COMPLETED
+  CANCELLED
+}
+
+enum ProductStatus {
+  DRAFT
+  PUBLISHED
+  SOLD_OUT
+  ARCHIVED
+}
+
+enum BookingStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum TransactionType {
+  WASTE_PURCHASE    
+  WASTE_DONATION      
+  PRODUCT_PURCHASE    
+  SERVICE_BOOKING     
+}
+
+enum TransactionStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  COMPLETED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentMethod {
+  CASH
+  TRANSFER
+  E_WALLET
+  COD
+}
+
+enum NotificationType {
+  OFFER_RESERVED
+  OFFER_TAKEN
+  BOOKING_UPDATE
+  CHAT_MESSAGE
+  TRANSACTION_UPDATE
+  APPROVAL_STATUS
+  REVIEW_RECEIVED
+  GENERAL
+}
+
+enum ChatType {
+  DIRECT
+  OFFER_INQUIRY
+  BOOKING_INQUIRY
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  LOCATION
+  FILE
+}
+
 
 model User {
   id            String    @id @default(cuid())
@@ -95,115 +172,125 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   lastLoginAt   DateTime?
-  accounts         Account[]
-  sessions         Session[]
-  posts            Post[]           
-  pengepulProfile  PengepulProfile?
-  pengrajinProfile PengrajinProfile?
-  chatRooms        ChatRoom[]       @relation("ChatParticipants")
-  messages         Message[]
-  transactions     Transaction[]    @relation("TransactionUser")
-  reviews          Review[]
-  notifications    Notification[]
-  craftRequests    CraftRequest[]
-  chatbotConversations ChatbotConversation[]
-  approvedPengepul     PengepulProfile[] @relation("ApprovedBy")
-  approvedPengrajin    PengrajinProfile[] @relation("ApprovedBy")
+  accounts              Account[]
+  sessions              Session[]
+  wasteOffers           WasteOffer[]
+  pengepulProfile       PengepulProfile?
+  pengrajinProfile      PengrajinProfile?
+  chatRooms             ChatRoom[]       @relation("ChatParticipants")
+  messages              Message[]
+  transactions          Transaction[]
+  sentReviews           Review[]         @relation("ReviewGiver")
+  bookings              ServiceBooking[]
+  cartItems             CartItem[]
+  orders                Order[]
+  notifications         Notification[]
+  chatbotConversations  ChatbotConversation[]
+  approvedPengepul      PengepulProfile[] @relation("ApprovedBy")
+  approvedPengrajin     PengrajinProfile[] @relation("ApprovedBy")
   
   @@map("users")
   @@index([email])
   @@index([role])
   @@index([latitude, longitude])
+  @@index([isActive])
 }
 
 model PengepulProfile {
-  id                String         @id @default(cuid())
-  userId            String         @unique
-  companyName       String?
-  licenseNumber     String?        @unique
-  specializedMaterials MaterialType[]
-  operatingArea     String[]      
-  description       String?        @db.Text
-  website           String?
-  workingHours      String?
-  totalReviews      Int            @default(0)
-  averageRating     Float?         @default(0)
-  
-  // Fields for approval system
-  approvalStatus    ApprovalStatus @default(PENDING)
-  whatsappNumber    String?
-  verificationDocs  String[]       // URLs to uploaded documents (KTP, License, etc)
-  rejectionReason   String?        @db.Text
-  submittedAt       DateTime       @default(now()) // When user submitted registration
-  approvedAt        DateTime?
-  approvedById      String?
-  approvedBy        User?          @relation("ApprovedBy", fields: [approvedById], references: [id])
-  
-  createdAt         DateTime       @default(now())
-  updatedAt         DateTime       @updatedAt
-  user              User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  takenPosts        Post[]         
-  transactions      Transaction[]  @relation("TransactionPengepul")
-  reviews           Review[]
+  id                    String         @id @default(cuid())
+  userId                String         @unique
+  companyName           String?
+  licenseNumber         String?        @unique
+  specializedMaterials  MaterialType[]
+  operatingArea         String[]
+  operatingRadius       Float?        
+  description           String?        @db.Text
+  website               String?
+  workingHours          String?
+  priceList             Json?
+  totalCollections      Int            @default(0)
+  totalWeight           Float          @default(0) 
+  totalReviews          Int            @default(0)
+  averageRating         Float          @default(0)
+  approvalStatus        ApprovalStatus @default(PENDING)
+  whatsappNumber        String?
+  verificationDocs      String[]       
+  rejectionReason       String?        @db.Text
+  submittedAt           DateTime       @default(now())
+  approvedAt            DateTime?
+  approvedById          String?
+  approvedBy            User?          @relation("ApprovedBy", fields: [approvedById], references: [id])
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+  user                  User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  takenOffers           WasteOffer[]
+  transactions          Transaction[]
+  reviews               Review[]       @relation("PengepulReviews")
 
   @@map("pengepul_profiles")
   @@index([userId])
   @@index([approvalStatus])
-  @@index([approvedAt])
+  @@index([averageRating])
 }
 
 model PengrajinProfile {
-  id            String         @id @default(cuid())
-  userId        String         @unique
-  craftType     String[]       
-  materials     MaterialType[] 
-  portfolio     String[]       // URLs to portfolio images
-  priceRange    String?        
-  description   String?        @db.Text
-  totalReviews  Int            @default(0)
-  averageRating Float?         @default(0)
-  instagramHandle String?      // Added for social media
-  whatsappNumber  String?      // Added for contact
-  
-  // Fields for approval system
-  approvalStatus    ApprovalStatus @default(PENDING)
-  verificationDocs  String[]       // URLs to uploaded documents (KTP, certificates, etc)
-  rejectionReason   String?        @db.Text
-  submittedAt       DateTime       @default(now()) // When user submitted registration
-  approvedAt        DateTime?
-  approvedById      String?
-  approvedBy        User?          @relation("ApprovedBy", fields: [approvedById], references: [id])
-  
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  requests      CraftRequest[]
-  transactions  Transaction[]  @relation("TransactionPengrajin")
-  reviews       Review[]
+  id                String         @id @default(cuid())
+  userId            String         @unique
+  craftTypes        String[]       
+  specializedMaterials MaterialType[]
+  portfolio         String[]       
+  yearsOfExperience Int?
+  description       String?        @db.Text
+  instagramHandle   String?
+  whatsappNumber    String?
+  workshopAddress   String?
+  workshopLatitude  Float?
+  workshopLongitude Float?
+  totalProducts         Int        @default(0)
+  totalSales            Int        @default(0)
+  totalBookings         Int        @default(0)
+  totalReviews          Int        @default(0)
+  averageRating         Float      @default(0)
+  approvalStatus        ApprovalStatus @default(PENDING)
+  verificationDocs      String[]     
+  rejectionReason       String?        @db.Text
+  submittedAt           DateTime       @default(now())
+  approvedAt            DateTime?
+  approvedById          String?
+  approvedBy            User?          @relation("ApprovedBy", fields: [approvedById], references: [id])
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  user              User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  products          CraftProduct[]
+  bookings          ServiceBooking[]
+  transactions      Transaction[]
+  reviews           Review[]       @relation("PengrajinReviews")
   
   @@map("pengrajin_profiles")
   @@index([userId])
   @@index([approvalStatus])
-  @@index([approvedAt])
+  @@index([averageRating])
 }
 
-model Post {
+model WasteOffer {
   id            String       @id @default(cuid())
   title         String
   description   String       @db.Text
   materialType  MaterialType
-  weight        Float?      
-  images        String[] 
-  condition     String?    
+  weight        Float?     
+  images        String[]
+  condition     String?
   address       String
   latitude      Float
   longitude     Float
-  status        PostStatus   @default(ACTIVE)
-  suggestedPrice Float?  
+  offerType     OfferType 
+  suggestedPrice Float? 
+  status        OfferStatus  @default(AVAILABLE)
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
-  takenAt       DateTime?   
-  completedAt   DateTime?   
+  reservedAt    DateTime?
+  takenAt       DateTime?
+  completedAt   DateTime?
   userId        String
   user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   pengepulId    String?
@@ -211,147 +298,254 @@ model Post {
   chatRooms     ChatRoom[]
   transactions  Transaction[]
 
-  @@map("posts")
+  @@map("waste_offers")
   @@index([userId])
   @@index([status])
+  @@index([offerType])
   @@index([materialType])
   @@index([latitude, longitude])
+  @@index([createdAt])
 }
 
-model CraftRequest {
-  id            String            @id @default(cuid())
+
+model CraftProduct {
+  id            String        @id @default(cuid())
   title         String
-  description   String            @db.Text
-  craftType     String
-  materialType  MaterialType?
-  budget        Float?
-  deadline      DateTime?
+  description   String        @db.Text
+  price         Float
+  images        String[]
+  category      String        
+  materials     MaterialType[]
+  dimensions    String?       
+  weight        Float?       
+  colors        String[]      
+  customizable  Boolean       @default(false)
+  stock         Int           @default(1)
+  status        ProductStatus @default(DRAFT)
+  tags          String[]
+  views         Int           @default(0)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  publishedAt   DateTime?
+  soldAt        DateTime?
+  pengrajinId   String
+  pengrajin     PengrajinProfile @relation(fields: [pengrajinId], references: [id], onDelete: Cascade)
+  orderItems    OrderItem[]
+  cartItems     CartItem[]
+  reviews       Review[]      @relation("ProductReviews")
+  
+  @@map("craft_products")
+  @@index([pengrajinId])
+  @@index([status])
+  @@index([category])
+  @@index([price])
+  @@index([createdAt])
+}
+
+model ServiceBooking {
+  id              String        @id @default(cuid())
+  title           String      
+  description     String        @db.Text
+  serviceType     String       
+  materialType    MaterialType?
+  budget          Float?
+  estimatedPrice  Float?        
+  finalPrice      Float?
   referenceImages String[]
-  address       String?
-  latitude      Float?
-  longitude     Float?
-  status        RequestStatus     @default(PENDING)
-  createdAt     DateTime          @default(now())
-  updatedAt     DateTime          @updatedAt
-  userId        String
-  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  pengrajinId   String?
-  pengrajin     PengrajinProfile? @relation(fields: [pengrajinId], references: [id])
-  chatRooms     ChatRoom[]
-  transactions  Transaction[]
-  @@map("craft_requests")
+  specifications  Json?         
+  deadline        DateTime?
+  address         String?
+  latitude        Float?
+  longitude       Float?
+  status          BookingStatus @default(PENDING)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  acceptedAt      DateTime?
+  startedAt       DateTime?
+  completedAt     DateTime?
+  userId          String
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pengrajinId     String?
+  pengrajin       PengrajinProfile? @relation(fields: [pengrajinId], references: [id])
+  chatRooms       ChatRoom[]
+  transactions    Transaction[]
+  
+  @@map("service_bookings")
+  @@index([userId])
+  @@index([pengrajinId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+
+model CartItem {
+  id          String       @id @default(cuid())
+  quantity    Int          @default(1)
+  notes       String?
+  addedAt     DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  
+  userId      String
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId   String
+  product     CraftProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, productId])
+  @@map("cart_items")
+  @@index([userId])
+}
+
+model Order {
+  id              String      @id @default(cuid())
+  orderNumber     String      @unique 
+  customerName    String
+  customerPhone   String
+  customerEmail   String
+  shippingAddress String
+  shippingCity    String?
+  shippingProvince String?
+  shippingMethod  String?     
+  shippingCost    Float       @default(0)
+  subtotal        Float
+  totalAmount     Float
+  paymentMethod   PaymentMethod?
+  paymentProof    String? 
+  orderNotes      String?
+  adminNotes      String?
+  status          TransactionStatus @default(PENDING)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  paidAt          DateTime?
+  shippedAt       DateTime?
+  completedAt     DateTime?
+  userId          String
+  user            User        @relation(fields: [userId], references: [id])
+  items           OrderItem[]
+  transactions    Transaction[]
+  
+  @@map("orders")
   @@index([userId])
   @@index([status])
-  @@index([latitude, longitude])
+  @@index([createdAt])
 }
 
-enum RequestStatus {
-  PENDING
-  ACCEPTED
-  IN_PROGRESS
-  COMPLETED
-  CANCELLED
+model OrderItem {
+  id          String       @id @default(cuid())
+  quantity    Int
+  price       Float        
+  subtotal    Float
+  notes       String?
+  orderId     String
+  order       Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId   String
+  product     CraftProduct @relation(fields: [productId], references: [id])
+  
+  @@map("order_items")
+  @@index([orderId])
+  @@index([productId])
 }
+
+model Transaction {
+  id            String            @id @default(cuid())
+  transactionNumber String        @unique 
+  type          TransactionType
+  amount        Float?
+  description   String?           @db.Text
+  paymentMethod PaymentMethod?
+  paymentProof  String?
+  status        TransactionStatus @default(PENDING)
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  confirmedAt   DateTime?
+  completedAt   DateTime?
+  userId        String
+  user          User              @relation(fields: [userId], references: [id])
+  wasteOfferId  String?
+  wasteOffer    WasteOffer?       @relation(fields: [wasteOfferId], references: [id])
+  pengepulId    String?
+  pengepul      PengepulProfile?  @relation(fields: [pengepulId], references: [id])
+  orderId       String?
+  order         Order?            @relation(fields: [orderId], references: [id])
+  bookingId     String?
+  booking       ServiceBooking?   @relation(fields: [bookingId], references: [id])
+  pengrajinId   String?
+  pengrajin     PengrajinProfile? @relation(fields: [pengrajinId], references: [id])
+  
+  @@map("transactions")
+  @@index([userId])
+  @@index([pengepulId])
+  @@index([pengrajinId])
+  @@index([status])
+  @@index([type])
+  @@index([createdAt])
+}
+
+model Review {
+  id          String   @id @default(cuid())
+  rating      Int   
+  comment     String?  @db.Text
+  images      String[] @default([])
+  response    String?  @db.Text
+  respondedAt DateTime?  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  reviewerId  String
+  reviewer    User     @relation("ReviewGiver", fields: [reviewerId], references: [id], onDelete: Cascade)
+  pengepulId  String?
+  pengepul    PengepulProfile? @relation("PengepulReviews", fields: [pengepulId], references: [id])
+  pengrajinId String?
+  pengrajin   PengrajinProfile? @relation("PengrajinReviews", fields: [pengrajinId], references: [id])
+  productId   String?
+  product     CraftProduct? @relation("ProductReviews", fields: [productId], references: [id])
+  
+  @@map("reviews")
+  @@index([reviewerId])
+  @@index([pengepulId])
+  @@index([pengrajinId])
+  @@index([productId])
+  @@index([rating])
+}
+
 
 model ChatRoom {
-  id        String   @id @default(cuid())
-  type      ChatType @default(DIRECT)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  postId    String?
-  post      Post?         @relation(fields: [postId], references: [id])
-  requestId String?
-  request   CraftRequest? @relation(fields: [requestId], references: [id])
-  participants User[]     @relation("ChatParticipants")
+  id          String   @id @default(cuid())
+  type        ChatType @default(DIRECT)
+  lastMessage String?
+  lastMessageAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  wasteOfferId String?
+  wasteOffer   WasteOffer?    @relation(fields: [wasteOfferId], references: [id])
+  bookingId    String?
+  booking      ServiceBooking? @relation(fields: [bookingId], references: [id])
+  participants User[]    @relation("ChatParticipants")
   messages     Message[]
+  
   @@map("chat_rooms")
-  @@index([postId])
-  @@index([requestId])
-}
-
-enum ChatType {
-  DIRECT    
-  POST      
-  REQUEST   
+  @@index([wasteOfferId])
+  @@index([bookingId])
+  @@index([lastMessageAt])
 }
 
 model Message {
-  id         String   @id @default(cuid())
-  content    String   @db.Text
+  id          String      @id @default(cuid())
+  content     String      @db.Text
   messageType MessageType @default(TEXT)
-  createdAt  DateTime @default(now())
-  readAt     DateTime?
-  senderId   String
-  sender     User      @relation(fields: [senderId], references: [id], onDelete: Cascade)
-  chatRoomId String
-  chatRoom   ChatRoom  @relation(fields: [chatRoomId], references: [id], onDelete: Cascade)
+  fileUrl     String?     // untuk image/file
+  createdAt   DateTime    @default(now())
+  readAt      DateTime?
+  
+  senderId    String
+  sender      User        @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  chatRoomId  String
+  chatRoom    ChatRoom    @relation(fields: [chatRoomId], references: [id], onDelete: Cascade)
+  
   @@map("messages")
   @@index([senderId])
   @@index([chatRoomId])
   @@index([createdAt])
 }
 
-enum MessageType {
-  TEXT
-  IMAGE
-  LOCATION
-}
-
-model Transaction {
-  id          String            @id @default(cuid())
-  type        TransactionType
-  amount      Float?          
-  description String?
-  status      TransactionStatus @default(PENDING)
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
-  completedAt DateTime?
-  userId      String
-  user        User              @relation("TransactionUser", fields: [userId], references: [id])
-  postId      String?
-  post        Post?             @relation(fields: [postId], references: [id])
-  requestId   String?
-  request     CraftRequest?     @relation(fields: [requestId], references: [id])
-  pengepulId  String?
-  pengepul    PengepulProfile?  @relation("TransactionPengepul", fields: [pengepulId], references: [id])
-  pengrajinId String?
-  pengrajin   PengrajinProfile? @relation("TransactionPengrajin", fields: [pengrajinId], references: [id])
-  @@map("transactions")
-  @@index([userId])
-  @@index([status])
-  @@index([type])
-}
-
-enum TransactionType {
-  WASTE_COLLECTION  
-  CRAFT_SERVICE     
-}
-
-enum TransactionStatus {
-  PENDING
-  CONFIRMED
-  IN_PROGRESS
-  COMPLETED
-  CANCELLED
-}
-
-model Review {
-  id         String @id @default(cuid())
-  rating     Int 
-  comment    String? @db.Text
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  reviewerId String
-  reviewer   User   @relation(fields: [reviewerId], references: [id], onDelete: Cascade)
-  pengepulId  String?
-  pengepul    PengepulProfile? @relation(fields: [pengepulId], references: [id])
-  pengrajinId String?
-  pengrajin   PengrajinProfile? @relation(fields: [pengrajinId], references: [id])
-  @@map("reviews")
-  @@index([reviewerId])
-  @@index([pengepulId])
-  @@index([pengrajinId])
-}
 
 model Notification {
   id        String           @id @default(cuid())
@@ -359,33 +553,34 @@ model Notification {
   message   String           @db.Text
   type      NotificationType
   isRead    Boolean          @default(false)
+  actionUrl String?          // URL untuk redirect
+  metadata  Json?            // data tambahan
   createdAt DateTime         @default(now())
+  readAt    DateTime?
+  
   userId    String
   user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
   @@map("notifications")
   @@index([userId])
   @@index([isRead])
+  @@index([createdAt])
 }
 
-enum NotificationType {
-  POST_TAKEN      
-  REQUEST_ACCEPTED 
-  CHAT_MESSAGE   
-  TRANSACTION_UPDATE
-  APPROVAL_STATUS
-  GENERAL         
-}
 
 model ChatbotConversation {
   id         String   @id @default(cuid())
-  sessionId  String  
+  sessionId  String
   query      String   @db.Text
   response   String   @db.Text
-  context    Json?   
+  context    Json?    // kontext pencarian/filter
   createdAt  DateTime @default(now())
+  
   userId     String?
   user       User?    @relation(fields: [userId], references: [id])
+  
   @@map("chatbot_conversations")
   @@index([userId])
   @@index([sessionId])
+  @@index([createdAt])
 }

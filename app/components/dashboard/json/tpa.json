@@ -1,0 +1,5 @@
+{"type":"FeatureCollection", "features": [
+{"type":"Feature","geometry":{"type":"Point","coordinates":[672232.95,9102190.38]},"properties":{"no":1,"nama":"TPA Talangagung","lat_1":"8?07'09.2\"S","long_1":"112?33'47.5\"E","lat_2":-8.119219,"long_2":112.563194,"x_utm":672232.95,"y_utm":9102190.38}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[695076.09,9109382.27]},"properties":{"no":2,"nama":"TPA Paras Poncokusumo","lat_1":"8?03'12.1\"S","long_1":"112?46'12.6\"E","lat_2":-8.053347,"long_2":112.770172,"x_utm":695076.09,"y_utm":9109382.27}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[683758.91,9132019.24]},"properties":{"no":3,"nama":"TPA Randu Agung Singosari","lat_1":"7?50'56.8\"S","long_1":"112?40'00.1\"E","lat_2":-7.8491,"long_2":112.666681,"x_utm":683758.91,"y_utm":9132019.24}}
+]}

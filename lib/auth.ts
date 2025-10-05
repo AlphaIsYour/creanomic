@@ -12,6 +12,7 @@ export const authOptions: NextAuthOptions = {
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      allowDangerousEmailAccountLinking: true,
     }),
     CredentialsProvider({
       name: "credentials",
@@ -100,6 +101,31 @@ export const authOptions: NextAuthOptions = {
               },
             });
           } else {
+            // Link Google account to existing user
+            const existingAccount = await prisma.account.findFirst({
+              where: {
+                userId: existingUser.id,
+                provider: "google",
+              },
+            });
+
+            if (!existingAccount) {
+              await prisma.account.create({
+                data: {
+                  userId: existingUser.id,
+                  type: account.type,
+                  provider: account.provider,
+                  providerAccountId: account.providerAccountId,
+                  access_token: account.access_token,
+                  refresh_token: account.refresh_token,
+                  expires_at: account.expires_at,
+                  token_type: account.token_type,
+                  scope: account.scope,
+                  id_token: account.id_token,
+                },
+              });
+            }
+
             // Update existing user
             await prisma.user.update({
               where: { email: user.email! },

@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import {
   MapPin,
   Palette,
-  DollarSign,
   FileCheck,
   ChevronRight,
   ChevronLeft,
@@ -98,7 +97,6 @@ export default function PengrajinRegistrationPage() {
     craftType: [] as string[],
     materials: [] as string[],
     portfolio: [] as string[],
-    priceRange: "",
     description: "",
     address: "",
     latitude: -7.250445 as number | null,
@@ -169,10 +167,6 @@ export default function PengrajinRegistrationPage() {
     if (step === 2) {
       if (!formData.description.trim()) {
         setError("Deskripsi profil wajib diisi");
-        return false;
-      }
-      if (!formData.priceRange) {
-        setError("Kisaran harga wajib dipilih");
         return false;
       }
     }
@@ -425,35 +419,6 @@ export default function PengrajinRegistrationPage() {
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8C1007] focus:border-transparent"
                   placeholder="Ceritakan tentang Anda, pengalaman, teknik yang dikuasai, dan keunikan karya Anda..."
                 />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Kisaran Harga <span className="text-red-500">*</span>
-                </label>
-                <div className="relative">
-                  <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <select
-                    name="priceRange"
-                    value={formData.priceRange}
-                    onChange={handleInputChange}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8C1007] focus:border-transparent"
-                  >
-                    <option value="">Pilih Kisaran Harga</option>
-                    <option value="< Rp 100.000">{"< Rp 100.000"}</option>
-                    <option value="Rp 100.000 - Rp 500.000">
-                      Rp 100.000 - Rp 500.000
-                    </option>
-                    <option value="Rp 500.000 - Rp 1.000.000">
-                      Rp 500.000 - Rp 1.000.000
-                    </option>
-                    <option value="Rp 1.000.000 - Rp 5.000.000">
-                      Rp 1.000.000 - Rp 5.000.000
-                    </option>
-                    <option value="> Rp 5.000.000">{"> Rp 5.000.000"}</option>
-                    <option value="Bervariasi">Bervariasi</option>
-                  </select>
-                </div>
               </div>
 
               <FileUpload
