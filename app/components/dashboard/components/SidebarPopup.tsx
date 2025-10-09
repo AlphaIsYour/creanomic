@@ -116,6 +116,10 @@ export function SidebarPopup({ isOpen, onClose, user }: SidebarPopupProps) {
     return () => clearInterval(interval);
   }, []);
 
+  const getUsernameSlug = () => {
+    return user?.name?.toLowerCase().replace(/\s+/g, "-") || user?.id || "";
+  };
+
   // Map Control Menu Items
   const mapControlItems: MenuItem[] = [
     {
@@ -202,30 +206,16 @@ export function SidebarPopup({ isOpen, onClose, user }: SidebarPopupProps) {
   const userMenuItems: MenuItem[] = [
     {
       id: "dashboard",
-      label: "Dashboard",
+      label: "Overview",
       icon: Home,
-      description: "Ringkasan aktivitas Anda",
+      description: "Ringkasan aktivitas",
       submenu: [
         {
           id: "dashboard-overview",
-          label: "Ringkasan Aktivitas",
-          icon: Eye,
-          description: "Overview lengkap",
-          href: "/dashboard",
-        },
-        {
-          id: "dashboard-stats",
-          label: "Statistik Sampah",
-          icon: BarChart2,
-          description: "Data sampah terkumpul",
-          href: "/dashboard/statistics",
-        },
-        {
-          id: "dashboard-notif",
-          label: "Notifikasi Terbaru",
-          icon: Bell,
-          description: "Update terkini",
-          href: "/dashboard/notifications",
+          label: "Profil & Aktivitas",
+          icon: User,
+          description: "Lihat overview lengkap",
+          href: `/profile/${getUsernameSlug()}`,
         },
       ],
     },
@@ -262,35 +252,6 @@ export function SidebarPopup({ isOpen, onClose, user }: SidebarPopupProps) {
           icon: Archive,
           description: "Penawaran lama",
           href: "/waste-offers/archive",
-        },
-      ],
-    },
-    {
-      id: "maps",
-      label: "Jelajah Peta",
-      icon: MapPin,
-      description: "Cari pengepul & pengrajin",
-      submenu: [
-        {
-          id: "maps-pengepul",
-          label: "Cari Pengepul Terdekat",
-          icon: Users,
-          description: "Temukan pengepul sampah",
-          href: "/maps/pengepul",
-        },
-        {
-          id: "maps-pengrajin",
-          label: "Cari Pengrajin",
-          icon: Hammer,
-          description: "Temukan pengrajin terampil",
-          href: "/maps/pengrajin",
-        },
-        {
-          id: "maps-waste-offers",
-          label: "Lihat Penawaran Sampah",
-          icon: MapPinned,
-          description: "Explore sampah tersedia",
-          href: "/maps/waste-offers",
         },
       ],
     },
@@ -332,39 +293,550 @@ export function SidebarPopup({ isOpen, onClose, user }: SidebarPopupProps) {
     },
     {
       id: "profile",
-      label: "Profil Saya",
-      icon: User,
-      description: "Kelola akun Anda",
+      label: "Upgrade Akun",
+      icon: Star,
+      description: "Tingkatkan role Anda",
       submenu: [
         {
-          id: "profile-edit",
-          label: "Edit Profil",
-          icon: Edit,
-          description: "Update informasi",
-          href: "/profile/edit",
-        },
-        {
           id: "profile-upgrade-pengepul",
-          label: "Upgrade ke Pengepul ⭐",
+          label: "Daftar Jadi Pengepul ⭐",
           icon: Users,
-          description: "Daftar jadi pengepul sampah",
+          description: "Kumpulkan sampah, dapatkan profit",
           href: "/register/pengepul",
         },
         {
           id: "profile-upgrade-pengrajin",
-          label: "Upgrade ke Pengrajin ⭐",
+          label: "Daftar Jadi Pengrajin ⭐",
           icon: Hammer,
-          description: "Daftar jadi pengrajin",
+          description: "Jual kerajinan daur ulang",
           href: "/register/pengrajin",
         },
       ],
     },
   ];
 
-  // PENGEPUL, PENGRAJIN, ADMIN menus... (keep existing ones from original file)
-  const pengepulMenuItems: MenuItem[] = [];
-  const pengrajinMenuItems: MenuItem[] = [];
-  const adminMenuItems: MenuItem[] = [];
+  const pengepulMenuItems: MenuItem[] = [
+    {
+      id: "dashboard",
+      label: "Dashboard Pengepul",
+      icon: Home,
+      description: "Ringkasan pickup Anda",
+      submenu: [
+        {
+          id: "dashboard-overview",
+          label: "Profil & Ringkasan",
+          icon: User,
+          description: "Overview aktivitas",
+          href: `/profile/${getUsernameSlug()}`,
+        },
+        {
+          id: "dashboard-stats",
+          label: "Statistik Pengambilan",
+          icon: BarChart2,
+          description: "Data performa",
+          href: `/dashboard/pengepul/${user?.id}/statistics`,
+        },
+        {
+          id: "dashboard-reviews",
+          label: "Rating & Review",
+          icon: Star,
+          description: "Feedback pelanggan",
+          href: `/dashboard/pengepul/${user?.id}/reviews`,
+        },
+      ],
+    },
+    {
+      id: "search-posts",
+      label: "Cari Sampah Tersedia",
+      icon: Search,
+      description: "Temukan post aktif",
+      submenu: [
+        {
+          id: "search-map",
+          label: "Peta Post Aktif",
+          icon: Map,
+          description: "Lihat di peta",
+          href: "/pengepul/posts/map",
+        },
+        {
+          id: "search-filter",
+          label: "Filter by Material",
+          icon: Filter,
+          description: "Cari material spesifik",
+          href: "/pengepul/posts?filter=material",
+        },
+        {
+          id: "search-nearby",
+          label: "Nearby Posts",
+          icon: MapPinned,
+          description: "Post terdekat",
+          href: "/pengepul/posts/nearby",
+        },
+      ],
+    },
+    {
+      id: "pickups",
+      label: "Pickup Saya",
+      icon: Package,
+      description: "Kelola pengambilan",
+      submenu: [
+        {
+          id: "pickups-pending",
+          label: "Menunggu Konfirmasi",
+          icon: Clock,
+          description: "Belum dikonfirmasi",
+          href: "/pengepul/pickups?status=pending",
+        },
+        {
+          id: "pickups-today",
+          label: "Dijadwalkan Hari Ini",
+          icon: Calendar,
+          description: "Pickup hari ini",
+          href: "/pengepul/pickups/today",
+        },
+        {
+          id: "pickups-completed",
+          label: "Riwayat Selesai",
+          icon: CheckCircle,
+          description: "Pickup selesai",
+          href: "/pengepul/pickups/completed",
+        },
+        {
+          id: "pickups-upload",
+          label: "Upload Bukti Pickup",
+          icon: Upload,
+          description: "Upload foto bukti",
+          href: "/pengepul/pickups/upload",
+        },
+      ],
+    },
+    {
+      id: "reports",
+      label: "Laporan & Statistik",
+      icon: BarChart3,
+      description: "Analitik performa",
+      submenu: [
+        {
+          id: "reports-total",
+          label: "Total Berat Terkumpul",
+          icon: TrendingUp,
+          description: "Akumulasi berat",
+          href: "/pengepul/reports/total-weight",
+        },
+        {
+          id: "reports-material",
+          label: "Material Breakdown",
+          icon: BarChart2,
+          description: "Breakdown per jenis",
+          href: "/pengepul/reports/materials",
+        },
+        {
+          id: "reports-monthly",
+          label: "Monthly Reports",
+          icon: FileText,
+          description: "Laporan bulanan",
+          href: "/pengepul/reports/monthly",
+        },
+      ],
+    },
+  ];
+
+  const pengrajinMenuItems: MenuItem[] = [
+    {
+      id: "dashboard",
+      label: "Dashboard Pengrajin",
+      icon: Home,
+      description: "Ringkasan bisnis Anda",
+      submenu: [
+        {
+          id: "dashboard-overview",
+          label: "Profil & Ringkasan",
+          icon: User,
+          description: "Overview pesanan",
+          href: `/profile/${getUsernameSlug()}`,
+        },
+        {
+          id: "dashboard-sales",
+          label: "Statistik Penjualan",
+          icon: TrendingUp,
+          description: "Data penjualan",
+          href: `/dashboard/pengrajin/${user?.id}/sales`,
+        },
+        {
+          id: "dashboard-reviews",
+          label: "Rating & Review",
+          icon: Star,
+          description: "Feedback customer",
+          href: `/dashboard/pengrajin/${user?.id}/reviews`,
+        },
+      ],
+    },
+    {
+      id: "products",
+      label: "Produk Kerajinan",
+      icon: Hammer,
+      description: "Kelola produk Anda",
+      submenu: [
+        {
+          id: "products-create",
+          label: "Tambah Produk Baru",
+          icon: Plus,
+          description: "Buat produk baru",
+          href: "/pengrajin/products/create",
+        },
+        {
+          id: "products-manage",
+          label: "Kelola Produk",
+          icon: Edit,
+          description: "Edit produk",
+          href: "/pengrajin/products/manage",
+        },
+        {
+          id: "products-gallery",
+          label: "Portfolio Gallery",
+          icon: Palette,
+          description: "Showcase karya",
+          href: "/pengrajin/products/gallery",
+        },
+        {
+          id: "products-pricing",
+          label: "Atur Harga & Stok",
+          icon: BarChart2,
+          description: "Manage pricing",
+          href: "/pengrajin/products/pricing",
+        },
+      ],
+    },
+    {
+      id: "orders",
+      label: "Pesanan Masuk",
+      icon: ClipboardList,
+      description: "Kelola pesanan",
+      submenu: [
+        {
+          id: "orders-custom",
+          label: "Request Custom",
+          icon: AlertCircle,
+          description: "Custom order masuk",
+          href: "/pengrajin/orders?type=custom",
+        },
+        {
+          id: "orders-pending",
+          label: "Order Pending",
+          icon: Clock,
+          description: "Belum dikonfirmasi",
+          href: "/pengrajin/orders?status=pending",
+        },
+        {
+          id: "orders-progress",
+          label: "Dalam Proses",
+          icon: TrendingUp,
+          description: "Sedang dikerjakan",
+          href: "/pengrajin/orders?status=in_progress",
+        },
+        {
+          id: "orders-completed",
+          label: "Selesai & Delivered",
+          icon: CheckCircle,
+          description: "Order selesai",
+          href: "/pengrajin/orders?status=completed",
+        },
+      ],
+    },
+    {
+      id: "materials",
+      label: "Cari Bahan Baku",
+      icon: Search,
+      description: "Hubungi pengepul",
+      submenu: [
+        {
+          id: "materials-contact",
+          label: "Kontak Pengepul",
+          icon: Users,
+          description: "List pengepul",
+          href: "/pengrajin/materials/pengepul",
+        },
+        {
+          id: "materials-availability",
+          label: "Ketersediaan Material",
+          icon: Package,
+          description: "Cek stok material",
+          href: "/pengrajin/materials/availability",
+        },
+        {
+          id: "materials-saved",
+          label: "Saved Suppliers",
+          icon: Heart,
+          description: "Supplier favorit",
+          href: "/pengrajin/materials/saved",
+        },
+      ],
+    },
+    {
+      id: "reports",
+      label: "Laporan & Analitik",
+      icon: BarChart3,
+      description: "Analisis bisnis",
+      submenu: [
+        {
+          id: "reports-sales",
+          label: "Penjualan Bulanan",
+          icon: TrendingUp,
+          description: "Laporan penjualan",
+          href: "/pengrajin/reports/sales",
+        },
+        {
+          id: "reports-products",
+          label: "Produk Terlaris",
+          icon: Star,
+          description: "Top products",
+          href: "/pengrajin/reports/top-products",
+        },
+        {
+          id: "reports-feedback",
+          label: "Customer Feedback",
+          icon: MessageCircle,
+          description: "Review & rating",
+          href: "/pengrajin/reports/feedback",
+        },
+      ],
+    },
+  ];
+
+  const adminMenuItems: MenuItem[] = [
+    {
+      id: "dashboard",
+      label: "Dashboard Admin",
+      icon: Home,
+      description: "Overview sistem",
+      submenu: [
+        {
+          id: "dashboard-overview",
+          label: "Overview Sistem",
+          icon: Eye,
+          description: "Status platform",
+          href: "/admin/dashboard",
+        },
+        {
+          id: "dashboard-activity",
+          label: "User Activity",
+          icon: Users,
+          description: "Aktivitas pengguna",
+          href: "/admin/dashboard/activity",
+        },
+        {
+          id: "dashboard-stats",
+          label: "Platform Stats",
+          icon: BarChart2,
+          description: "Statistik lengkap",
+          href: "/admin/dashboard/stats",
+        },
+      ],
+    },
+    {
+      id: "approval",
+      label: "Approval Management",
+      icon: CheckCircle,
+      description: "Review pendaftaran",
+      badge: "12",
+      submenu: [
+        {
+          id: "approval-pengepul",
+          label: "Pending Pengepul",
+          icon: Package,
+          description: "Review collector",
+          href: "/admin/approvals/pengepul",
+        },
+        {
+          id: "approval-pengrajin",
+          label: "Pending Pengrajin",
+          icon: Hammer,
+          description: "Review crafter",
+          href: "/admin/approvals/pengrajin",
+        },
+        {
+          id: "approval-docs",
+          label: "Review Documents",
+          icon: FileText,
+          description: "Periksa dokumen",
+          href: "/admin/approvals/documents",
+        },
+        {
+          id: "approval-history",
+          label: "Rejected History",
+          icon: Archive,
+          description: "Riwayat rejected",
+          href: "/admin/approvals/rejected",
+        },
+      ],
+    },
+    {
+      id: "users",
+      label: "Manajemen User",
+      icon: Users,
+      description: "Kelola pengguna",
+      submenu: [
+        {
+          id: "users-all",
+          label: "Semua User",
+          icon: Users,
+          description: "List semua user",
+          href: "/admin/users",
+        },
+        {
+          id: "users-active",
+          label: "User Aktif",
+          icon: CheckCircle,
+          description: "User yang aktif",
+          href: "/admin/users?status=active",
+        },
+        {
+          id: "users-banned",
+          label: "Banned Users",
+          icon: AlertCircle,
+          description: "User yang dibanned",
+          href: "/admin/users?status=banned",
+        },
+        {
+          id: "users-reports",
+          label: "User Reports",
+          icon: Shield,
+          description: "Laporan masalah",
+          href: "/admin/users/reports",
+        },
+      ],
+    },
+    {
+      id: "moderation",
+      label: "Moderasi Konten",
+      icon: Shield,
+      description: "Review konten",
+      submenu: [
+        {
+          id: "moderation-posts",
+          label: "Review Posts",
+          icon: Package,
+          description: "Periksa postingan",
+          href: "/admin/moderation/posts",
+        },
+        {
+          id: "moderation-reported",
+          label: "Reported Content",
+          icon: AlertCircle,
+          description: "Konten dilaporkan",
+          href: "/admin/moderation/reported",
+        },
+        {
+          id: "moderation-products",
+          label: "Flagged Products",
+          icon: Hammer,
+          description: "Produk bermasalah",
+          href: "/admin/moderation/products",
+        },
+        {
+          id: "moderation-delete",
+          label: "Delete/Archive",
+          icon: Trash2,
+          description: "Hapus konten",
+          href: "/admin/moderation/delete",
+        },
+      ],
+    },
+    {
+      id: "analytics",
+      label: "Analytics & Reports",
+      icon: BarChart3,
+      description: "Laporan platform",
+      submenu: [
+        {
+          id: "analytics-growth",
+          label: "User Growth",
+          icon: TrendingUp,
+          description: "Pertumbuhan user",
+          href: "/admin/analytics/growth",
+        },
+        {
+          id: "analytics-transactions",
+          label: "Transaction Volume",
+          icon: BarChart2,
+          description: "Volume transaksi",
+          href: "/admin/analytics/transactions",
+        },
+        {
+          id: "analytics-materials",
+          label: "Material Statistics",
+          icon: Package,
+          description: "Stats material",
+          href: "/admin/analytics/materials",
+        },
+        {
+          id: "analytics-geo",
+          label: "Geographic Distribution",
+          icon: Map,
+          description: "Distribusi geografis",
+          href: "/admin/analytics/geographic",
+        },
+      ],
+    },
+    {
+      id: "broadcast",
+      label: "Broadcast Notifikasi",
+      icon: Megaphone,
+      description: "Kirim announcement",
+      submenu: [
+        {
+          id: "broadcast-send",
+          label: "Kirim Announcement",
+          icon: Megaphone,
+          description: "Broadcast pesan",
+          href: "/admin/broadcast/send",
+        },
+        {
+          id: "broadcast-updates",
+          label: "System Updates",
+          icon: Bell,
+          description: "Update sistem",
+          href: "/admin/broadcast/system",
+        },
+        {
+          id: "broadcast-history",
+          label: "Notifikasi History",
+          icon: Clock,
+          description: "Riwayat broadcast",
+          href: "/admin/broadcast/history",
+        },
+      ],
+    },
+    {
+      id: "settings",
+      label: "Pengaturan Sistem",
+      icon: Settings,
+      description: "Konfigurasi platform",
+      submenu: [
+        {
+          id: "settings-materials",
+          label: "Material Types",
+          icon: Package,
+          description: "Kelola jenis material",
+          href: "/admin/settings/materials",
+        },
+        {
+          id: "settings-platform",
+          label: "Platform Settings",
+          icon: Settings,
+          description: "Konfigurasi umum",
+          href: "/admin/settings/platform",
+        },
+        {
+          id: "settings-approval",
+          label: "Approval Rules",
+          icon: CheckCircle,
+          description: "Atur aturan approval",
+          href: "/admin/settings/approval-rules",
+        },
+      ],
+    },
+  ];
 
   // Select menu based on role
   let menuItems: MenuItem[] = [];
@@ -588,7 +1060,7 @@ export function SidebarPopup({ isOpen, onClose, user }: SidebarPopupProps) {
             </div>
 
             {/* Footer */}
-            <div className="p-3 border-t border-gray-100 space-y-1 bg-gray-50/50">
+            <div className="p-3 border-t border-gray-100 space-y-1 rounded-b-lg bg-gray-50/50">
               <button
                 onClick={() =>
                   handleMenuClick({
@@ -605,32 +1077,6 @@ export function SidebarPopup({ isOpen, onClose, user }: SidebarPopupProps) {
                 <span className="text-gray-700 text-sm group-hover:text-gray-900">
                   Pengaturan
                 </span>
-              </button>
-
-              <button
-                onClick={() =>
-                  handleMenuClick({
-                    id: "help",
-                    label: "Help",
-                    icon: HelpCircle,
-                    description: "",
-                    href: "/help",
-                  })
-                }
-                className="w-full flex items-center space-x-3 p-2.5 rounded-md hover:bg-white transition-colors text-left group"
-              >
-                <HelpCircle className="w-4 h-4 text-gray-600 group-hover:text-[#8C1007]" />
-                <span className="text-gray-700 text-sm group-hover:text-gray-900">
-                  Bantuan
-                </span>
-              </button>
-
-              <button
-                onClick={handleLogout}
-                className="w-full flex items-center space-x-3 p-2.5 rounded-md hover:bg-red-50 text-red-600 hover:text-red-700 transition-colors text-left"
-              >
-                <LogOut className="w-4 h-4" />
-                <span className="text-sm font-medium">Keluar</span>
               </button>
             </div>
           </motion.div>

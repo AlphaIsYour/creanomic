@@ -7,6 +7,14 @@ const nextConfig: NextConfig = {
       "avatars.githubusercontent.com",
       "res.cloudinary.com",
     ],
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "**.vercel-storage.com",
+        port: "",
+        pathname: "/**",
+      },
+    ],
   },
   experimental: {
     serverComponentsExternalPackages: ["@prisma/client", "bcryptjs"],

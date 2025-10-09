@@ -40,9 +40,9 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
 
   return (
     <form onSubmit={handleSubmit} className="relative w-full">
-      <div className="flex items-center bg-white/80 backdrop-blur-sm rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-200">
+      <div className="flex items-center bg-white/80 backdrop-blur-sm rounded-lg shadow-sm  overflow-hidden hover:shadow-md transition-shadow duration-200">
         {/* Search Mode Toggle */}
-        <div className="flex bg-[#F4E1D2]/30 border-r border-gray-200">
+        <div className="flex bg-[#F4E1D2]/30 ">
           {searchModes.map((mode, index) => (
             <button
               key={mode.type}
@@ -51,7 +51,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
                 console.log("Switching to search mode:", mode.type);
                 setSearchMode(mode.type);
               }}
-              className={`px-3 py-3 text-xs font-medium transition-all duration-200 relative ${
+              className={`px-3 py-[12px] text-xs font-medium transition-all duration-200 relative ${
                 searchMode === mode.type
                   ? "bg-[#8C1007] text-white"
                   : "text-[#2C2C2C] hover:bg-[#F4E1D2]/50"
@@ -59,9 +59,9 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
             >
               <div className="flex items-center gap-1.5">
                 {mode.type === "location" ? (
-                  <FiMapPin className="h-3.5 w-3.5" />
+                  <FiMapPin className="h-3 w-3" />
                 ) : (
-                  <FiPackage className="h-3.5 w-3.5" />
+                  <FiPackage className="h-3 w-3" />
                 )}
                 <span className="hidden sm:inline whitespace-nowrap">
                   {mode.label}
@@ -74,7 +74,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
         {/* Search Input */}
         <div className="relative flex-1">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <FiSearch className="h-4 w-4 text-gray-400" />
+            <FiSearch className="h-3 w-3 text-gray-400" />
           </div>
           <input
             type="text"
@@ -88,7 +88,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
         {/* Search Button */}
         <button
           type="submit"
-          className="px-3.5 py-3 bg-[#8C1007] text-white rounded-r-lg hover:bg-[#7a0d06] focus:outline-none transition-colors duration-200 flex items-center justify-center"
+          className="px-3 py-3 bg-[#8C1007] text-white rounded-r-lg hover:bg-[#7a0d06] focus:outline-none transition-colors duration-200 flex items-center justify-center"
           aria-label="Search"
         >
           {getIcon()}

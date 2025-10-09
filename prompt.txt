@@ -1,0 +1,24 @@
+jawaban untuk pertanyaan satu nih app/dashboard/pengrajin/
+  ├── [userId]/
+  │   ├── page.tsx (Overview Dashboard)
+  │   ├── sales/page.tsx
+  │   └── reviews/page.tsx
+  │   └── products/page.tsx
+  │   └── bookings/page.tsx
+  │   └── settings/page.tsx
+  └── components/
+      ├── StatsCard.tsx
+      ├── SalesChart.tsx
+      ├── RecentOrdersTable.tsx
+      ├── RecentBookingsTable.tsx
+      ├── ReviewCard.tsx
+      └── QuickActions.tsx
+api/pengrajin/
+  ├── stats/[userId]/route.ts
+  ├── sales/[userId]/route.ts
+  ├── bookings/[userId]/route.ts & [bookingId]/route.ts
+  ├── products/[userId]/route.ts & [productId]/route.ts
+  ├── settingss/[userId]/route.ts 
+  └── reviews/
+      ├── [userId]/route.ts
+      └── respond/route.ts
