@@ -2,56 +2,78 @@ import React from "react";
 import { FiPlay } from "react-icons/fi";
 
 interface ActionButtonsProps {
-  showStores: boolean;
-  showPartners: boolean;
-  loadingStores: boolean;
-  loadingPartners: boolean;
-  onToggleStore: () => void;
-  onTogglePartner: () => void;
+  showPengepuls: boolean;
+  showPengrajins: boolean;
+  showWasteOffers: boolean;
+  loadingPengepuls: boolean;
+  loadingPengrajins: boolean;
+  loadingWasteOffers: boolean;
+  onTogglePengepul: () => void;
+  onTogglePengrajin: () => void;
+  onToggleWasteOffer: () => void;
   onStartTour: () => void;
 }
 
 export const ActionButtons: React.FC<ActionButtonsProps> = ({
-  showStores,
-  showPartners,
-  loadingStores,
-  loadingPartners,
-  onToggleStore,
-  onTogglePartner,
+  showPengepuls,
+  showPengrajins,
+  showWasteOffers,
+  loadingPengepuls,
+  loadingPengrajins,
+  loadingWasteOffers,
+  onTogglePengepul,
+  onTogglePengrajin,
+  onToggleWasteOffer,
   onStartTour,
 }) => {
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:flex lg:flex-row gap-2">
       <button
-        id="tombol-tampilkan-toko"
-        onClick={onToggleStore}
-        disabled={loadingStores}
+        id="tombol-tampilkan-waste-offers"
+        onClick={onToggleWasteOffer}
+        disabled={loadingWasteOffers}
         className="px-4 py-2 border-2 border-[#097593] bg-gradient-to-tl from-[#096B68] to-[#129990] hover:from-[#00615e] hover:to-[#017d75] text-white rounded-[12px] shadow-md flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 text-[12px] font-semibold"
       >
         <span className="font-medium hidden sm:inline">
-          {loadingStores
+          {loadingWasteOffers
             ? "Memuat..."
-            : showStores
-              ? "SEMBUNYIKAN"
-              : "TAMPILKAN"}
+            : showWasteOffers
+            ? "SEMBUNYIKAN"
+            : "TAMPILKAN"}
         </span>
-        <span>TOKO</span>
+        <span>WASTE OFFERS</span>
       </button>
 
       <button
-        id="tombol-tampilkan-mitra"
-        onClick={onTogglePartner}
-        disabled={loadingPartners}
+        id="tombol-tampilkan-pengepul"
+        onClick={onTogglePengepul}
+        disabled={loadingPengepuls}
+        className="px-4 py-2 border-2 border-[#097593] bg-gradient-to-tl from-[#096B68] to-[#129990] hover:from-[#00615e] hover:to-[#017d75] text-white rounded-[12px] shadow-md flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 text-[12px] font-semibold"
+      >
+        <span className="font-medium hidden sm:inline">
+          {loadingPengepuls
+            ? "Memuat..."
+            : showPengepuls
+            ? "SEMBUNYIKAN"
+            : "TAMPILKAN"}
+        </span>
+        <span>PENGEPUL</span>
+      </button>
+
+      <button
+        id="tombol-tampilkan-pengrajin"
+        onClick={onTogglePengrajin}
+        disabled={loadingPengrajins}
         className="px-4 py-2 border-2 border-[#097593] bg-gradient-to-tl from-[#096B68] to-[#129990] hover:from-[#00615e] hover:to-[#017d75] text-white rounded-[12px] shadow-md flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-600 text-[12px] font-semibold"
       >
         <span className="font-medium hidden sm:inline">
-          {loadingPartners
+          {loadingPengrajins
             ? "Memuat..."
-            : showPartners
-              ? "SEMBUNYIKAN"
-              : "TAMPILKAN"}
+            : showPengrajins
+            ? "SEMBUNYIKAN"
+            : "TAMPILKAN"}
         </span>
-        <span>MITRA</span>
+        <span>PENGRAJIN</span>
       </button>
 
       <button

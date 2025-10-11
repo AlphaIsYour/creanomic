@@ -29,27 +29,30 @@ import {
 } from "@/app/components/dashboard/utils/mapUtils";
 import { createPopupContent } from "@/app/components/dashboard/utils/popupTemplates";
 
-export default function MapComponent() {
+interface MapComponentProps {
+  onDistrictsLoaded?: (districts: string[]) => void;
+}
+
+export default function MapComponent({ onDistrictsLoaded }: MapComponentProps) {
   const mapRef = useRef<L.Map | null>(null);
   const layerGroupsRef = useRef<{ [key: string]: L.LayerGroup }>({});
-  const productLayerRef = useRef<L.LayerGroup | null>(null);
+  const wasteOfferLayerRef = useRef<L.LayerGroup | null>(null);
+  const pengepulLayerRef = useRef<L.LayerGroup | null>(null);
+  const pengrajinLayerRef = useRef<L.LayerGroup | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [layers, setLayers] = useState(layerConfigs);
   const [districts, setDistricts] = useState<string[]>([]);
 
   const {
-    loadingStores,
-    loadingPartners,
-    showStores,
-    showPartners,
+    loading,
+    showPengepuls,
+    showPengrajins,
     wasteFacilities,
-    storeLayerRef,
-    partnerLayerRef,
-    setShowStores,
-    setShowPartners,
+    setShowPengepuls,
+    setShowPengrajins,
     fetchWasteFacilities,
-    loadStores,
-    loadPartners,
+    loadPengepuls,
+    loadPengrajins,
   } = useMapData(mapRef);
 
   const { userLocation, isLocating, locationError, getUserLocation } =
@@ -64,11 +67,9 @@ export default function MapComponent() {
     mapRef,
     districts,
     typedMalangBoundaries,
-    storeLayerRef,
-    partnerLayerRef,
-    productLayerRef,
-    showStores,
-    showPartners
+    wasteOfferLayerRef,
+    pengepulLayerRef,
+    pengrajinLayerRef
   );
 
   const showCustomToast = useCallback(
@@ -102,9 +103,9 @@ export default function MapComponent() {
       tpst3r: "tpst3r",
     };
 
-    const facilityKey = layerKeyMap[layerId];
-    if (wasteFacilities.facilities && wasteFacilities.facilities[facilityKey]) {
-      wasteFacilities.facilities[facilityKey].forEach((facility: any) => {
+    const facilityKey = layerKeyMap[layerId] as keyof typeof wasteFacilities;
+    if (wasteFacilities && wasteFacilities[facilityKey]) {
+      wasteFacilities[facilityKey].forEach((facility: any) => {
         if (facility.latitude && facility.longitude) {
           const layerConfig = layerConfigs.find((l) => l.id === layerId);
           const markerIcon = L.icon({
@@ -141,7 +142,9 @@ export default function MapComponent() {
       const mapElement = document.getElementById("map");
       if (!mapElement || mapRef.current) return;
 
-      const map = L.map("map").setView([-7.9666, 112.6326], 10);
+      const map = L.map("map", {
+        zoomControl: false, // Disable zoom control (+/- buttons)
+      }).setView([-7.9666, 112.6326], 10);
       mapRef.current = map;
 
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -305,9 +308,9 @@ export default function MapComponent() {
       });
 
       if (mapRef.current) {
-        storeLayerRef.current = L.layerGroup().addTo(mapRef.current);
-        partnerLayerRef.current = L.layerGroup().addTo(mapRef.current);
-        productLayerRef.current = L.layerGroup().addTo(mapRef.current);
+        wasteOfferLayerRef.current = L.layerGroup().addTo(mapRef.current);
+        pengepulLayerRef.current = L.layerGroup().addTo(mapRef.current);
+        pengrajinLayerRef.current = L.layerGroup().addTo(mapRef.current);
       }
 
       const uniqueDistricts = Array.from(
@@ -318,6 +321,11 @@ export default function MapComponent() {
         )
       );
       setDistricts(uniqueDistricts);
+
+      // Call the callback to pass districts to parent (only once on mount)
+      if (onDistrictsLoaded && uniqueDistricts.length > 0) {
+        onDistrictsLoaded(uniqueDistricts);
+      }
 
       if (geoJSONLayer.getBounds().isValid()) {
         map.fitBounds(geoJSONLayer.getBounds(), {
@@ -341,7 +349,7 @@ export default function MapComponent() {
         delete (window as any).showRoute;
       }
     };
-  }, [storeLayerRef, partnerLayerRef]);
+  }, []); // Remove onDistrictsLoaded from dependency to prevent re-initialization
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -367,23 +375,23 @@ export default function MapComponent() {
   useEffect(() => {
     if (typeof window !== "undefined") {
       (window as any).mapControls = {
-        toggleStore: async () => {
-          setShowStores((prev) => !prev);
-          if (!showStores) {
-            await loadStores();
+        togglePengepul: async () => {
+          setShowPengepuls((prev) => !prev);
+          if (!showPengepuls) {
+            await loadPengepuls();
           } else {
-            if (storeLayerRef.current) {
-              storeLayerRef.current.clearLayers();
+            if (pengepulLayerRef.current) {
+              pengepulLayerRef.current.clearLayers();
             }
           }
         },
-        togglePartner: async () => {
-          setShowPartners((prev) => !prev);
-          if (!showPartners) {
-            await loadPartners();
+        togglePengrajin: async () => {
+          setShowPengrajins((prev) => !prev);
+          if (!showPengrajins) {
+            await loadPengrajins();
           } else {
-            if (partnerLayerRef.current) {
-              partnerLayerRef.current.clearLayers();
+            if (pengrajinLayerRef.current) {
+              pengrajinLayerRef.current.clearLayers();
             }
           }
         },
@@ -423,10 +431,10 @@ export default function MapComponent() {
           showCustomToast("Memulai tour panduan!", "success");
         },
         getState: () => ({
-          showStores,
-          showPartners,
-          loadingStores,
-          loadingPartners,
+          showPengepuls,
+          showPengrajins,
+          loadingPengepuls: loading.pengepuls,
+          loadingPengrajins: loading.pengrajins,
           isLocating,
           layers,
           isRoutingEnabled: routing.isRoutingEnabled,
@@ -434,10 +442,10 @@ export default function MapComponent() {
       };
     }
   }, [
-    showStores,
-    showPartners,
-    loadingStores,
-    loadingPartners,
+    showPengepuls,
+    showPengrajins,
+    loading.pengepuls,
+    loading.pengrajins,
     isLocating,
     layers,
     routing,
@@ -445,7 +453,7 @@ export default function MapComponent() {
 
   const handleSearchWithToast = async (
     query: string,
-    searchType: "location" | "product"
+    searchType: "location" | "entity"
   ) => {
     if (!query?.trim()) {
       showCustomToast("Masukkan kata kunci pencarian", "error");
@@ -456,8 +464,8 @@ export default function MapComponent() {
       showCustomToast("Mencari...", "loading");
       await handleSearch(query.trim(), searchType);
 
-      if (searchType === "product") {
-        showCustomToast(`Produk "${query}" ditemukan!`, "success");
+      if (searchType === "entity") {
+        showCustomToast(`Hasil pencarian "${query}" ditemukan!`, "success");
       } else {
         showCustomToast(`Lokasi "${query}" ditemukan!`, "success");
       }

@@ -52,6 +52,7 @@ import {
   MapPinIcon,
   Route,
   Play,
+  Recycle,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
@@ -93,10 +94,12 @@ interface SidebarPopupProps {
 export function SidebarPopup({ isOpen, onClose, user }: SidebarPopupProps) {
   const [hoveredMenu, setHoveredMenu] = useState<string | null>(null);
   const [mapState, setMapState] = useState<any>({
-    showStores: false,
-    showPartners: false,
-    loadingStores: false,
-    loadingPartners: false,
+    showPengrajins: false,
+    showPengepuls: false,
+    showWasteOffers: false,
+    loadingPengrajins: false,
+    loadingPengepuls: false,
+    loadingWasteOffers: false,
     isLocating: false,
     layers: [],
     isRoutingEnabled: false,
@@ -129,32 +132,47 @@ export function SidebarPopup({ isOpen, onClose, user }: SidebarPopupProps) {
       description: "Kelola tampilan peta",
       submenu: [
         {
+          id: "toggle-waste-offers",
+          label: mapState.loadingWasteOffers
+            ? "Memuat Waste Offers..."
+            : mapState.showWasteOffers
+            ? "Sembunyikan Waste Offers"
+            : "Tampilkan Waste Offers",
+          icon: Recycle,
+          description: "Toggle penawaran sampah",
+          onClick: () => {
+            if (typeof window !== "undefined" && (window as any).mapControls) {
+              (window as any).mapControls.toggleWasteOffers?.();
+            }
+          },
+        },
+        {
           id: "toggle-pengepul",
-          label: mapState.loadingStores
+          label: mapState.loadingPengepuls
             ? "Memuat Pengepul..."
-            : mapState.showStores
+            : mapState.showPengepuls
             ? "Sembunyikan Pengepul"
             : "Tampilkan Pengepul",
           icon: Users,
           description: "Toggle marker pengepul sampah",
           onClick: () => {
             if (typeof window !== "undefined" && (window as any).mapControls) {
-              (window as any).mapControls.toggleStore();
+              (window as any).mapControls.togglePengepul();
             }
           },
         },
         {
           id: "toggle-pengrajin",
-          label: mapState.loadingPartners
+          label: mapState.loadingPengrajins
             ? "Memuat Pengrajin..."
-            : mapState.showPartners
+            : mapState.showPengrajins
             ? "Sembunyikan Pengrajin"
             : "Tampilkan Pengrajin",
           icon: Hammer,
           description: "Toggle marker pengrajin",
           onClick: () => {
             if (typeof window !== "undefined" && (window as any).mapControls) {
-              (window as any).mapControls.togglePartner();
+              (window as any).mapControls.togglePengrajin();
             }
           },
         },
@@ -902,7 +920,7 @@ export function SidebarPopup({ isOpen, onClose, user }: SidebarPopupProps) {
             </div>
 
             {/* Menu Items - Scrollable */}
-            <div className="flex-1  scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
+            <div className="flex-1 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
               <nav className="p-2 space-y-1">
                 {/* Map Controls Section */}
                 {mapControlItems.map((item) => {

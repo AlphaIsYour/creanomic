@@ -1,31 +1,36 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { useCallback } from "react";
 import L from "leaflet";
 import { FeatureCollection } from "geojson";
 import {
-  Product,
-  Store,
-  ProductSearchResult,
+  Pengepul,
+  Pengrajin,
+  WasteOffer,
+  WasteFacility,
 } from "@/app/components/dashboard/types/map.types";
-import { ProductSearchPopup } from "@/app/components/dashboard/components/map/ProductSearchPopup";
+import { createPopupContent } from "@/app/components/dashboard/utils/popupTemplates";
+
+interface SearchResults {
+  wasteOffers: WasteOffer[];
+  pengepuls: Pengepul[];
+  pengrajins: Pengrajin[];
+}
 
 export const useMapSearch = (
   mapRef: React.MutableRefObject<L.Map | null>,
   districts: string[],
   malangBoundaries: FeatureCollection,
-  storeLayerRef: React.MutableRefObject<L.LayerGroup | null>,
-  partnerLayerRef: React.MutableRefObject<L.LayerGroup | null>,
-  productLayerRef: React.MutableRefObject<L.LayerGroup | null>,
-  showStores: boolean,
-  showPartners: boolean
+  wasteOfferLayerRef: React.MutableRefObject<L.LayerGroup | null>,
+  pengepulLayerRef: React.MutableRefObject<L.LayerGroup | null>,
+  pengrajinLayerRef: React.MutableRefObject<L.LayerGroup | null>
 ) => {
-  // Enhanced product search with flexible matching
-  const searchProducts = async (query: string): Promise<Product[]> => {
+  // Search waste offers
+  const searchWasteOffers = async (query: string): Promise<WasteOffer[]> => {
     try {
-      console.log("Searching products with query:", query);
-
+      console.log("Searching waste offers with query:", query);
       const response = await fetch(
-        `/api/products/search?q=${encodeURIComponent(query)}`
+        `/api/waste-offers/search?q=${encodeURIComponent(query)}`
       );
 
       if (!response.ok) {
@@ -33,23 +38,19 @@ export const useMapSearch = (
       }
 
       const data = await response.json();
-      const products = data.products || [];
-
-      console.log("Search results:", products);
-      return products;
+      return data.wasteOffers || [];
     } catch (error) {
-      console.error("Error searching products:", error);
+      console.error("Error searching waste offers:", error);
       return [];
     }
   };
 
-  const getStoresByProduct = async (
-    productId: string
-  ): Promise<{ stores: Store[]; product: Product | null }> => {
+  // Search pengepuls
+  const searchPengepuls = async (query: string): Promise<Pengepul[]> => {
     try {
-      console.log("Getting stores for product ID:", productId);
+      console.log("Searching pengepuls with query:", query);
       const response = await fetch(
-        `/api/stores/by-product?productId=${productId}`
+        `/api/pengepuls/search?q=${encodeURIComponent(query)}`
       );
 
       if (!response.ok) {
@@ -57,23 +58,56 @@ export const useMapSearch = (
       }
 
       const data = await response.json();
-      console.log("Stores by product API response:", data);
-      return { stores: data.stores || [], product: data.product };
+      return data.pengepuls || [];
     } catch (error) {
-      console.error("Error getting stores by product:", error);
-      return { stores: [], product: null };
+      console.error("Error searching pengepuls:", error);
+      return [];
+    }
+  };
+
+  // Search pengrajins
+  const searchPengrajins = async (query: string): Promise<Pengrajin[]> => {
+    try {
+      console.log("Searching pengrajins with query:", query);
+      const response = await fetch(
+        `/api/pengrajins/search?q=${encodeURIComponent(query)}`
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data.pengrajins || [];
+    } catch (error) {
+      console.error("Error searching pengrajins:", error);
+      return [];
+    }
+  };
+
+  // Search all entities
+  const searchAll = async (query: string): Promise<SearchResults> => {
+    try {
+      const [wasteOffers, pengepuls, pengrajins] = await Promise.all([
+        searchWasteOffers(query),
+        searchPengepuls(query),
+        searchPengrajins(query),
+      ]);
+
+      return { wasteOffers, pengepuls, pengrajins };
+    } catch (error) {
+      console.error("Error in searchAll:", error);
+      return { wasteOffers: [], pengepuls: [], pengrajins: [] };
     }
   };
 
   const handleSearch = useCallback(
-    async (query: string, searchType: "location" | "product" = "location") => {
+    async (query: string, searchType: "location" | "entity" = "location") => {
       console.log("=== SEARCH DEBUG START ===");
       console.log("handleSearch called with:", {
         query,
         searchType,
-        searchTypeType: typeof searchType,
         mapExists: !!mapRef.current,
-        productLayerExists: !!productLayerRef.current,
       });
 
       if (!query || !mapRef.current) {
@@ -86,184 +120,168 @@ export const useMapSearch = (
         return;
       }
 
-      // PRODUCT SEARCH LOGIC
-      console.log(
-        'Checking if searchType === "product":',
-        searchType === "product"
-      );
-      if (searchType === "product") {
-        console.log("Executing enhanced product search...");
+      // ENTITY SEARCH LOGIC (waste offers, pengepuls, pengrajins)
+      if (searchType === "entity") {
+        console.log("Executing entity search...");
 
         try {
-          const products = await searchProducts(query);
-          console.log("Found products:", products);
+          const results = await searchAll(query);
+          console.log("Search results:", results);
 
-          if (products.length === 0) {
+          const totalResults =
+            results.wasteOffers.length +
+            results.pengepuls.length +
+            results.pengrajins.length;
+
+          if (totalResults === 0) {
             const suggestions = [
               "Coba gunakan kata kunci yang lebih umum (misal: 'plastik' bukan 'botol plastik')",
               "Periksa ejaan kata kunci",
               "Coba kata kunci dalam bahasa Indonesia",
-              "Gunakan kategori produk (misal: 'organik', 'plastik', 'kertas')",
+              "Gunakan kategori material (misal: 'organik', 'plastik', 'kertas')",
             ];
 
             throw new Error(
-              `Produk "${query}" tidak ditemukan.\n\nSaran pencarian:\n${suggestions
+              `Tidak ditemukan hasil untuk "${query}".\n\nSaran pencarian:\n${suggestions
                 .map((s) => `• ${s}`)
                 .join("\n")}`
             );
           }
 
-          // Clear existing product markers
-          if (productLayerRef.current) {
-            console.log("Clearing previous product markers");
-            productLayerRef.current.clearLayers();
-          } else {
-            console.error("productLayerRef is null!");
-            return;
-          }
+          // Clear existing markers
+          wasteOfferLayerRef.current?.clearLayers();
+          pengepulLayerRef.current?.clearLayers();
+          pengrajinLayerRef.current?.clearLayers();
 
-          // Get all stores for all matching products
-          const allStores: Store[] = [];
-          const productStoreMap = new Map<string, Store[]>();
+          const allBounds: [number, number][] = [];
 
-          for (const product of products) {
-            const result = await getStoresByProduct(product.id);
-            const stores = result.stores;
+          // Render waste offers
+          if (results.wasteOffers.length > 0 && wasteOfferLayerRef.current) {
+            console.log(`Rendering ${results.wasteOffers.length} waste offers`);
+            results.wasteOffers.forEach((offer) => {
+              if (offer.latitude && offer.longitude) {
+                const markerIcon = L.icon({
+                  iconUrl: "/marker/waste-offer.svg",
+                  iconSize: [32, 32],
+                  iconAnchor: [16, 32],
+                  popupAnchor: [0, -32],
+                });
 
-            if (stores.length > 0) {
-              allStores.push(...stores);
-              productStoreMap.set(product.id, stores);
-            }
-          }
-
-          console.log("All stores selling matching products:", allStores);
-
-          if (allStores.length === 0) {
-            throw new Error(
-              `Produk dengan kata kunci "${query}" ditemukan, tetapi belum ada toko yang menjualnya.\n\nSilakan coba produk lain atau hubungi admin untuk menambahkan toko.`
-            );
-          }
-
-          // Remove duplicates based on store ID
-          const uniqueStores = allStores.filter(
-            (store, index, self) =>
-              index === self.findIndex((s) => s.id === store.id)
-          );
-
-          // Create product markers for all unique stores
-          uniqueStores.forEach((store, index) => {
-            console.log(`Creating marker ${index + 1} for store:`, store);
-
-            if (store.latitude && store.longitude && productLayerRef.current) {
-              const markerIcon = L.icon({
-                iconUrl: "/marker/products.svg",
-                iconSize: [32, 32],
-                iconAnchor: [16, 32],
-                popupAnchor: [0, -32],
-                shadowUrl: undefined,
-                className: "product-search-marker",
-              });
-
-              let marker;
-              try {
-                marker = L.marker([store.latitude, store.longitude], {
+                const marker = L.marker([offer.latitude, offer.longitude], {
                   icon: markerIcon,
                 });
-              } catch (iconError) {
-                console.warn("Product icon failed, using default:", iconError);
-                marker = L.marker([store.latitude, store.longitude]);
+
+                const popupContent = createPopupContent.wasteOffer(offer);
+
+                marker.bindPopup(popupContent, {
+                  minWidth: 280,
+                  maxWidth: 320,
+                  className: "custom-popup",
+                });
+
+                marker.addTo(wasteOfferLayerRef.current!);
+                allBounds.push([offer.latitude, offer.longitude]);
               }
-
-              // Find which products this store sells from our search
-              const storeProducts = products.filter((product) => {
-                const productStores = productStoreMap.get(product.id) || [];
-                return productStores.some((s) => s.id === store.id);
-              });
-
-              // Generate popup content using the FIXED component with cache busting
-              const timestamp = Date.now();
-              console.log(
-                `Generating popup content for store ${store.id} at timestamp ${timestamp}`
-              );
-
-              const popupContent = ProductSearchPopup.generatePopupContent({
-                store,
-                products: storeProducts,
-                query,
-                totalProductsFound: products.length,
-              });
-
-              // Add timestamp to ensure popup content is not cached
-              const finalPopupContent = `
-                <div data-timestamp="${timestamp}">
-                  ${popupContent}
-                </div>
-              `;
-
-              marker.bindPopup(finalPopupContent, {
-                minWidth: 600,
-                maxWidth: 600,
-                className: `custom-popup popup-${timestamp}`,
-              });
-
-              // Add event listener to force content refresh when popup opens
-              marker.on("popupopen", function (e) {
-                console.log(
-                  `Popup opened for store ${
-                    store.id
-                  } at ${new Date().toISOString()}`
-                );
-                // Force a small delay to ensure DOM is ready
-                setTimeout(() => {
-                  const popup = e.popup;
-                  if (popup && popup.update) {
-                    popup.update();
-                  }
-                }, 50);
-              });
-
-              marker.addTo(productLayerRef.current);
-              console.log(
-                `Added marker for store ${store.id} with ${storeProducts.length} products`
-              );
-            } else {
-              console.warn(`Store ${index + 1} missing coordinates:`, store);
-            }
-          });
-
-          // Fit map to show all stores
-          if (uniqueStores.length > 0) {
-            const validStores = uniqueStores.filter(
-              (store) => store.latitude && store.longitude
-            );
-            if (validStores.length > 0) {
-              const bounds = L.latLngBounds(
-                validStores.map((store) => [store.latitude, store.longitude])
-              );
-              mapRef.current.fitBounds(bounds, { padding: [20, 20] });
-              console.log(
-                `Map fitted to bounds for ${validStores.length} stores selling ${products.length} matching products`
-              );
-            }
+            });
           }
 
-          console.log("Enhanced product search completed successfully");
+          // Render pengepuls
+          if (results.pengepuls.length > 0 && pengepulLayerRef.current) {
+            console.log(`Rendering ${results.pengepuls.length} pengepuls`);
+            results.pengepuls.forEach((pengepul) => {
+              if (pengepul.user.latitude && pengepul.user.longitude) {
+                const markerIcon = L.icon({
+                  iconUrl: "/marker/pengepul.svg",
+                  iconSize: [32, 32],
+                  iconAnchor: [16, 32],
+                  popupAnchor: [0, -32],
+                });
+
+                const marker = L.marker(
+                  [pengepul.user.latitude, pengepul.user.longitude],
+                  {
+                    icon: markerIcon,
+                  }
+                );
+
+                const popupContent = createPopupContent.pengepul(pengepul);
+
+                marker.bindPopup(popupContent, {
+                  minWidth: 280,
+                  maxWidth: 320,
+                  className: "custom-popup",
+                });
+
+                marker.addTo(pengepulLayerRef.current!);
+                allBounds.push([
+                  pengepul.user.latitude,
+                  pengepul.user.longitude,
+                ]);
+              }
+            });
+          }
+
+          // Render pengrajins
+          if (results.pengrajins.length > 0 && pengrajinLayerRef.current) {
+            console.log(`Rendering ${results.pengrajins.length} pengrajins`);
+            results.pengrajins.forEach((pengrajin) => {
+              if (pengrajin.workshopLatitude && pengrajin.workshopLongitude) {
+                const markerIcon = L.icon({
+                  iconUrl: "/marker/pengrajin.svg",
+                  iconSize: [32, 32],
+                  iconAnchor: [16, 32],
+                  popupAnchor: [0, -32],
+                });
+
+                const marker = L.marker(
+                  [pengrajin.workshopLatitude, pengrajin.workshopLongitude],
+                  {
+                    icon: markerIcon,
+                  }
+                );
+
+                const popupContent = createPopupContent.pengrajin(pengrajin);
+
+                marker.bindPopup(popupContent, {
+                  minWidth: 288,
+                  maxWidth: 320,
+                  className: "custom-popup",
+                });
+
+                marker.addTo(pengrajinLayerRef.current!);
+                allBounds.push([
+                  pengrajin.workshopLatitude,
+                  pengrajin.workshopLongitude,
+                ]);
+              }
+            });
+          }
+
+          // Fit map to show all results
+          if (allBounds.length > 0) {
+            const bounds = L.latLngBounds(allBounds);
+            mapRef.current.fitBounds(bounds, { padding: [50, 50] });
+            console.log(
+              `Map fitted to bounds for ${totalResults} results (${results.wasteOffers.length} offers, ${results.pengepuls.length} pengepuls, ${results.pengrajins.length} pengrajins)`
+            );
+          }
+
+          console.log("Entity search completed successfully");
           return;
         } catch (error) {
-          console.error("Product search error:", error);
+          console.error("Entity search error:", error);
           throw error;
         }
       }
 
-      // ENHANCED LOCATION SEARCH LOGIC
-      console.log("Executing enhanced location search...");
+      // LOCATION SEARCH LOGIC
+      console.log("Executing location search...");
 
-      // Make location search more flexible too
       const normalizeQuery = (text: string) =>
         text.toLowerCase().replace(/[^a-z0-9]/g, "");
       const normalizedQuery = normalizeQuery(query);
 
-      // Search in districts with flexible matching
+      // Search in districts
       const foundDistrict = districts.find((d) => {
         const normalizedDistrict = normalizeQuery(d);
         return (
@@ -286,80 +304,20 @@ export const useMapSearch = (
         return;
       }
 
-      let found = false;
-
-      // Enhanced store search with flexible matching
-      if (storeLayerRef.current && showStores) {
-        console.log("Searching in stores with flexible matching...");
-        const layers = storeLayerRef.current.getLayers() as L.Marker[];
-        const foundStore = layers.find((layer) => {
-          const popup = layer.getPopup();
-          if (!popup) return false;
-          const content = popup.getContent();
-          if (typeof content !== "string") return false;
-
-          const normalizedContent = normalizeQuery(content);
-          return (
-            normalizedContent.includes(normalizedQuery) ||
-            content.toLowerCase().includes(query.toLowerCase())
-          );
-        });
-
-        if (foundStore) {
-          const latLng = foundStore.getLatLng();
-          mapRef.current.setView(latLng, 18);
-          foundStore.openPopup();
-          found = true;
-          console.log("Found and opened store popup");
-          return;
-        }
-      }
-
-      // Enhanced partner search with flexible matching
-      if (partnerLayerRef.current && showPartners) {
-        console.log("Searching in partners with flexible matching...");
-        const layers = partnerLayerRef.current.getLayers() as L.Marker[];
-        const foundPartner = layers.find((layer) => {
-          const popup = layer.getPopup();
-          if (!popup) return false;
-          const content = popup.getContent();
-          if (typeof content !== "string") return false;
-
-          const normalizedContent = normalizeQuery(content);
-          return (
-            normalizedContent.includes(normalizedQuery) ||
-            content.toLowerCase().includes(query.toLowerCase())
-          );
-        });
-
-        if (foundPartner) {
-          const latLng = foundPartner.getLatLng();
-          mapRef.current.setView(latLng, 18);
-          foundPartner.openPopup();
-          found = true;
-          console.log("Found and opened partner popup");
-          return;
-        }
-      }
-
-      if (!found) {
-        console.log("Location not found");
-        throw new Error(
-          `Lokasi "${query}" tidak ditemukan.\n\nSaran:\n• Coba nama kecamatan yang lebih lengkap\n• Periksa ejaan nama lokasi\n• Pastikan toko/mitra sudah ditampilkan di peta`
-        );
-      }
+      // If location not found, suggest entity search
+      throw new Error(
+        `Lokasi "${query}" tidak ditemukan.\n\nSaran:\n• Coba nama kecamatan yang lebih lengkap\n• Atau gunakan pencarian entitas untuk mencari penawaran sampah, pengepul, atau pengrajin`
+      );
     },
     [
       mapRef,
       districts,
       malangBoundaries,
-      storeLayerRef,
-      partnerLayerRef,
-      productLayerRef,
-      showStores,
-      showPartners,
+      wasteOfferLayerRef,
+      pengepulLayerRef,
+      pengrajinLayerRef,
     ]
   );
 
-  return { handleSearch };
+  return { handleSearch, searchWasteOffers, searchPengepuls, searchPengrajins };
 };

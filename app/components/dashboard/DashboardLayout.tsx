@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
@@ -7,12 +8,13 @@ import dynamic from "next/dynamic";
 import { FloatingHeader } from "@/app/components/dashboard/components/FloatingHeader";
 import { SidebarPopup } from "@/app/components/dashboard/components/SidebarPopup";
 import { ProfilePopup } from "@/app/components/dashboard/components/ProfilePopup";
+import ChatbotWrapper from "@/app/components/ChatbotWrapper";
 
 // Dynamic import MapDisplay with SSR disabled
 const MapDisplay = dynamic(
   () => import("@/app/components/dashboard/components/MapDisplay"),
   { ssr: false }
-);
+) as any;
 
 export function DashboardLayout() {
   const { data: session } = useSession();
@@ -20,6 +22,7 @@ export function DashboardLayout() {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
+  const [districts, setDistricts] = useState<string[]>([]);
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
@@ -39,10 +42,15 @@ export function DashboardLayout() {
     setIsProfileOpen(true);
   };
 
+  // Callback untuk menerima districts dari MapDisplay
+  const handleDistrictsLoaded = (districtNames: string[]) => {
+    setDistricts(districtNames);
+  };
+
   return (
     <div className="relative h-screen w-full bg-gray-100 overflow-hidden">
       {/* Full Screen Map */}
-      <MapDisplay />
+      <MapDisplay onDistrictsLoaded={handleDistrictsLoaded} />
 
       {/* Floating Header */}
       <FloatingHeader
@@ -52,6 +60,7 @@ export function DashboardLayout() {
         onFilter={handleFilter}
         isProfileOpen={isProfileOpen}
         user={session?.user}
+        districts={districts}
       />
 
       {/* Sidebar Popup */}
@@ -67,6 +76,7 @@ export function DashboardLayout() {
         onClose={() => setIsProfileOpen(false)}
         user={session?.user}
       />
+      <ChatbotWrapper />
     </div>
   );
 }

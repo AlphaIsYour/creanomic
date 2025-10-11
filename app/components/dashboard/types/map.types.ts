@@ -1,26 +1,59 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Step } from "react-joyride";
+// types/map.types.ts
 
-export interface Store {
-  userId: string;
+export interface Pengepul {
   id: string;
-  storeName: string;
-  location: string;
-  latitude: number;
-  longitude: number;
-  logoUrl: string;
-  bannerUrl?: string | null;
-  slug: string;
+  userId: string;
+  companyName: string | null;
+  licenseNumber: string | null;
+  specializedMaterials: string[];
+  operatingArea: string[];
+  operatingRadius: number | null;
+  description: string | null;
+  website: string | null;
+  workingHours: string | null;
+  priceList: any;
+  totalCollections: number;
+  totalWeight: number;
+  averageRating: number;
+  totalReviews: number;
+  whatsappNumber: string | null;
+  user: {
+    id: string;
+    name: string | null;
+    email: string;
+    image: string | null;
+    phone: string | null;
+    address: string | null;
+    latitude: number | null;
+    longitude: number | null;
+  };
 }
 
-export interface Partner {
+export interface Pengrajin {
   id: string;
-  businessName: string;
-  address: string;
-  latitude: number;
-  longitude: number;
-  image: string;
-  expertise: string[];
+  userId: string;
+  craftTypes: string[];
+  specializedMaterials: string[];
+  portfolio: string[];
+  workshopAddress: string | null;
+  workshopLatitude: number | null;
+  workshopLongitude: number | null;
+  averageRating: number;
+  totalReviews: number;
+  totalProducts: number;
+  totalSales: number;
+  description: string | null;
+  instagramHandle: string | null;
+  whatsappNumber: string | null;
+  yearsOfExperience: number | null;
+  user: {
+    id: string;
+    name: string | null;
+    email: string;
+    image: string | null;
+    phone: string | null;
+  };
 }
 
 export interface WasteFacility {
@@ -33,37 +66,39 @@ export interface WasteFacility {
 }
 
 export interface TPST3RProperties {
-  no?: number;
-  nama?: string;
-  alamat?: string;
+  nama: string;
   desa?: string;
   kecamatan?: string;
-  kapasitas_?: number;
   lat_1?: string;
   long_1?: string;
   lat_2?: string;
   long_2?: string;
+  kapasitas_?: string;
 }
 
 export interface Product {
-  id: string;
   name: string;
   description?: string;
-  price?: number;
   image?: string;
-  slug: string;
-  category: string;
-  subcategory?: string;
 }
 
-export interface ProductSearchResult {
-  product: Product;
-  stores: Store[];
-}
-
-export interface SearchMode {
-  type: "location" | "product";
-  label: string;
+export interface WasteOffer {
+  id: string;
+  title: string;
+  description: string;
+  materialType: string;
+  weight: number | null;
+  images: string[];
+  address: string;
+  latitude: number;
+  longitude: number;
+  offerType: "SELL" | "DONATE";
+  status: string;
+  user: {
+    id: string;
+    name: string | null;
+    image: string | null;
+  };
 }
 
 export interface LayerConfig {
@@ -74,7 +109,6 @@ export interface LayerConfig {
   isActive: boolean;
 }
 
-// NEW: Routing interfaces
 export interface UserLocation {
   latitude: number;
   longitude: number;
@@ -98,16 +132,6 @@ export interface RouteInfo {
   coordinates: [number, number][];
 }
 
-export interface StoreResponse {
-  stores: Store[];
-  message: string;
-}
-
-export interface PartnerResponse {
-  partners: Partner[];
-  message: string;
-}
-
 export interface WasteFacilitiesResponse {
   facilities: {
     bankSampah: WasteFacility[];
@@ -121,17 +145,4 @@ export interface WasteFacilitiesResponse {
 export interface ProductSearchResponse {
   products: Product[];
   message: string;
-}
-
-export interface StoresByProductResponse {
-  stores: Store[];
-  product: Product;
-  message: string;
-}
-
-export interface StoryStep extends Step {
-  mapAction?: {
-    center: L.LatLngExpression;
-    zoom: number;
-  };
 }

@@ -43,9 +43,23 @@ export const layerConfigs = [
 ];
 
 // NEW: Product marker configuration
-export const productMarkerConfig = {
-  icon: "/marker/products.svg",
-  iconSize: [32, 32] as [number, number],
-  iconAnchor: [16, 32] as [number, number],
-  popupAnchor: [0, -32] as [number, number],
+export const entityMarkerConfigs = {
+  wasteOffer: {
+    icon: "/marker/products.svg",
+    iconSize: [32, 32] as [number, number],
+    iconAnchor: [16, 32] as [number, number],
+    popupAnchor: [0, -32] as [number, number],
+  },
+  pengepul: {
+    icon: "/marker/pengepul.svg",
+    iconSize: [32, 32] as [number, number],
+    iconAnchor: [16, 32] as [number, number],
+    popupAnchor: [0, -32] as [number, number],
+  },
+  pengrajin: {
+    icon: "/marker/pengrajin.svg",
+    iconSize: [32, 32] as [number, number],
+    iconAnchor: [16, 32] as [number, number],
+    popupAnchor: [0, -32] as [number, number],
+  },
 };
