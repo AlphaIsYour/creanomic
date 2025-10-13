@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Providers } from "./providers";
+import "@mantine/core/styles.css";
+import "@mantine/notifications/styles.css";
+import { MantineProvider } from "@mantine/core";
+import { Notifications } from "@mantine/notifications";
 
 export const metadata: Metadata = {
   title: "Daurin - Green Business Platform",
@@ -20,7 +24,10 @@ export default function RootLayout({
         style={{ fontFamily: "mona-sans" }}
         suppressHydrationWarning
       >
-        <Providers>{children}</Providers>
+        <MantineProvider>
+          <Notifications position="top-right" />
+          <Providers>{children}</Providers>
+        </MantineProvider>
       </body>
     </html>
   );

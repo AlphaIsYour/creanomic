@@ -1,18 +1,40 @@
 import axios from "axios";
 import {
-  StoreResponse,
-  PartnerResponse,
+  Pengepul,
+  Pengrajin,
+  WasteOffer,
   WasteFacilitiesResponse,
 } from "@/app/components/dashboard/types/map.types";
 
+// Response interfaces
+export interface PengepulResponse {
+  pengepuls: Pengepul[];
+  message: string;
+}
+
+export interface PengrajinResponse {
+  pengrajins: Pengrajin[];
+  message: string;
+}
+
+export interface WasteOfferResponse {
+  wasteOffers: WasteOffer[];
+  message: string;
+}
+
 export const mapServices = {
-  async fetchStores(): Promise<StoreResponse> {
-    const response = await axios.get<StoreResponse>("/api/stores");
+  async fetchPengepuls(): Promise<PengepulResponse> {
+    const response = await axios.get<PengepulResponse>("/api/pengepuls");
     return response.data;
   },
 
-  async fetchPartners(): Promise<PartnerResponse> {
-    const response = await axios.get<PartnerResponse>("/api/partners");
+  async fetchPengrajins(): Promise<PengrajinResponse> {
+    const response = await axios.get<PengrajinResponse>("/api/pengrajins");
+    return response.data;
+  },
+
+  async fetchWasteOffers(): Promise<WasteOfferResponse> {
+    const response = await axios.get<WasteOfferResponse>("/api/waste-offers");
     return response.data;
   },
 

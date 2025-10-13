@@ -9,8 +9,7 @@ import {
 export const createPopupContent = {
   // PENGEPUL POPUP
   pengepul: (pengepul: Pengepul) => {
-    const profileImage =
-      pengepul.user.image || "/images/placeholder-avatar.png";
+    const profileImage = pengepul.user.image || "/images/photo-placeholder.svg";
     const companyName =
       pengepul.companyName || pengepul.user.name || "Pengepul";
     const rating =
@@ -38,7 +37,7 @@ export const createPopupContent = {
         </div>
         <div class="p-4 space-y-3">
           <div class="flex items-center space-x-3">
-            <img src="${profileImage}" alt="${companyName}" class="w-12 h-12 rounded-full border-2 border-green-200 object-cover bg-gray-100" onerror="this.src='/images/placeholder-avatar.png'" />
+            <img src="${profileImage}" alt="${companyName}" class="w-12 h-12 rounded-full border-2 border-green-200 object-cover bg-gray-100" onerror="this.src='/images/photo-placeholder.svg'" />
             <div class="flex-1 min-w-0">
               <h3 class="font-bold text-base text-gray-900 leading-tight truncate" title="${companyName}">${companyName}</h3>
               ${
@@ -144,7 +143,7 @@ export const createPopupContent = {
   // PENGRAJIN POPUP
   pengrajin: (pengrajin: Pengrajin) => {
     const profileImage =
-      pengrajin.user.image || "/images/placeholder-avatar.png";
+      pengrajin.user.image || "/images/photo-placeholder.svg";
     const crafterName = pengrajin.user.name || "Pengrajin";
     const rating =
       pengrajin.averageRating > 0 ? pengrajin.averageRating.toFixed(1) : "N/A";
@@ -198,7 +197,7 @@ export const createPopupContent = {
             !portfolioImage
               ? `
             <div class="flex items-center space-x-3">
-              <img src="${profileImage}" alt="${crafterName}" class="w-12 h-12 rounded-full border-2 border-orange-200 object-cover bg-gray-100" onerror="this.src='/images/placeholder-avatar.png'" />
+              <img src="${profileImage}" alt="${crafterName}" class="w-12 h-12 rounded-full border-2 border-orange-200 object-cover bg-gray-100" onerror="this.src='/images/photo-placeholder.svg'" />
               <div class="flex-1 min-w-0">
                 <h3 class="font-bold text-base text-gray-900 leading-tight truncate" title="${crafterName}">${crafterName}</h3>
                 ${
@@ -417,10 +416,109 @@ export const createPopupContent = {
     `;
   },
 
+  // Tambahkan function ini ke file popupTemplates.ts (setelah wasteFacility)
+
+  facility: (props: TPST3RProperties) => {
+    const facilityName = props.nama || "Tidak ada nama";
+    const facilityAddress = `${props.desa ? `Desa ${props.desa}` : ""}${
+      props.desa && props.kecamatan ? ", " : ""
+    }${props.kecamatan ? `Kecamatan ${props.kecamatan}` : ""}`;
+
+    // Parse coordinates if available
+    let latitude: number | null = null;
+    let longitude: number | null = null;
+
+    if (props.lat_1 && props.long_1) {
+      latitude = parseFloat(props.lat_1);
+      longitude = parseFloat(props.long_1);
+    } else if (props.lat_2 && props.long_2) {
+      latitude = parseFloat(props.lat_2);
+      longitude = parseFloat(props.long_2);
+    }
+
+    return `
+    <div class="w-72 bg-white rounded-xl shadow-2xl overflow-hidden border border-gray-100 font-sans antialiased">
+      <div class="relative h-28 bg-gradient-to-br from-teal-500 to-cyan-600 flex items-center justify-center">
+        <div class="relative z-10 text-center">
+          <svg class="w-10 h-10 text-white opacity-80 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+          </svg>
+          <div class="text-white text-xs font-medium opacity-75">Fasilitas Pengolahan Sampah</div>
+        </div>
+      </div>
+      
+      <div class="p-4 space-y-3">
+        <div>
+          <h3 class="font-bold text-base text-gray-900 leading-tight">${facilityName}</h3>
+          ${
+            facilityAddress
+              ? `<p class="text-xs text-gray-500 mt-1">${facilityAddress}</p>`
+              : ""
+          }
+        </div>
+        
+        ${
+          props.desa || props.kecamatan
+            ? `
+          <div class="bg-teal-50 rounded-lg p-2.5 border border-teal-200">
+            ${
+              props.desa
+                ? `<p class="text-xs text-teal-700"><span class="font-medium">Desa:</span> ${props.desa}</p>`
+                : ""
+            }
+            ${
+              props.kecamatan
+                ? `<p class="text-xs text-teal-700 ${
+                    props.desa ? "mt-1" : ""
+                  }"><span class="font-medium">Kecamatan:</span> ${
+                    props.kecamatan
+                  }</p>`
+                : ""
+            }
+          </div>
+        `
+            : ""
+        }
+        
+        ${
+          props.kapasitas_
+            ? `
+          <div class="flex items-center space-x-2 text-xs">
+            <svg class="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 0l-2 2a1 1 0 101.414 1.414L8 10.414l1.293 1.293a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+            </svg>
+            <span class="text-gray-700"><span class="font-medium">Kapasitas:</span> ${props.kapasitas_}</span>
+          </div>
+        `
+            : ""
+        }
+        
+        ${
+          latitude && longitude
+            ? `
+          <div class="pt-1">
+            <button onclick="window.showRoute && window.showRoute(${latitude}, ${longitude}, '${facilityName.replace(
+                /'/g,
+                "\\'"
+              )}')" class="w-full bg-gradient-to-r from-teal-600 to-cyan-700 hover:from-teal-700 hover:to-cyan-800 text-white text-xs font-semibold py-2.5 px-4 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 flex items-center justify-center space-x-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
+              </svg>
+              <span>Tampilkan Rute</span>
+            </button>
+          </div>
+        `
+            : ""
+        }
+      </div>
+    </div>
+  `;
+  },
+
   wasteOffer: (offer: WasteOffer) => {
-    const offerImage = offer.images[0] || "/images/placeholder-waste.png";
+    const offerImage = offer.images[0] || "/images/photo-placeholder.svg";
     const userName = offer.user.name || "Anonymous";
-    const userImage = offer.user.image || "/images/placeholder-avatar.png";
+    const userImage = offer.user.image || "/images/photo-placeholder.svg";
     const offerTypeText = offer.offerType === "SELL" ? "Dijual" : "Donasi";
     const offerTypeBg =
       offer.offerType === "SELL"
@@ -464,7 +562,7 @@ export const createPopupContent = {
       
       <div class="p-4 space-y-3">
         <div class="flex items-center space-x-3 pb-3 border-b border-gray-100">
-          <img src="${userImage}" alt="${userName}" class="w-10 h-10 rounded-full border-2 border-gray-200 object-cover bg-gray-100" onerror="this.src='/images/placeholder-avatar.png'" />
+          <img src="${userImage}" alt="${userName}" class="w-10 h-10 rounded-full border-2 border-gray-200 object-cover bg-gray-100" onerror="this.src='/images/photo-placeholder.svg'" />
           <div class="flex-1 min-w-0">
             <p class="text-sm font-semibold text-gray-900 truncate">${userName}</p>
             <p class="text-xs text-gray-500">Pemilik</p>

@@ -3,7 +3,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Menu, Filter } from "lucide-react";
+import { Menu, Filter, Layers } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import dynamic from "next/dynamic";
 import { SearchBar } from "@/app/components/dashboard/components/SearchBar";
@@ -89,6 +89,11 @@ export function FloatingHeader({
           {/* Filter Button with Legend on Hover & Click */}
           <div className="relative flex-shrink-0" ref={filterRef}>
             <button
+              className={`p-2.5 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 mr-2 relative bg-white/80 text-gray-700 hover:bg-white`}
+            >
+              <Filter className="w-5 h-5" />
+            </button>
+            <button
               onClick={() => setIsLegendOpen(!isLegendOpen)}
               onMouseEnter={() => setIsLegendHovered(true)}
               onMouseLeave={() => setIsLegendHovered(false)}
@@ -99,7 +104,7 @@ export function FloatingHeader({
               }`}
               aria-label="Filter"
             >
-              <Filter className="w-5 h-5" />
+              <Layers className="w-5 h-5" />
             </button>
 
             {/* District Legend on Hover or Click */}

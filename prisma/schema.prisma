@@ -172,6 +172,7 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   lastLoginAt   DateTime?
+  csMessages            CSMessage[]      @relation("CSMessages")
   accounts              Account[]
   sessions              Session[]
   wasteOffers           WasteOffer[]
@@ -307,6 +308,23 @@ model WasteOffer {
   @@index([createdAt])
 }
 
+model CSMessage {
+  id        String   @id @default(cuid())
+  message   String   @db.Text
+  isRead    Boolean  @default(false)
+  reply     String?  @db.Text
+  repliedAt DateTime?
+  repliedBy String?
+  createdAt DateTime @default(now())
+  
+  userId    String
+  user      User     @relation("CSMessages", fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("cs_messages")
+  @@index([userId])
+  @@index([isRead])
+  @@index([createdAt])
+}
 
 model CraftProduct {
   id            String        @id @default(cuid())

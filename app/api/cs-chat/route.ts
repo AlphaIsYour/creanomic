@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Simpan pesan CS
-    await prisma.csMessage.create({
+    await prisma.cSMessage.create({
       data: {
         message,
         userId: user.id,

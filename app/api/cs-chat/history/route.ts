@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Ambil chat history
-    const messages = await prisma.csMessage.findMany({
+    const messages = await prisma.cSMessage.findMany({
       where: { userId: user.id },
       orderBy: { createdAt: "asc" },
     });

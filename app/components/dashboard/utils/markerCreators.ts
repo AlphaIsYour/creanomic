@@ -1,73 +1,80 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import L from "leaflet";
 import {
-  Store,
-  Partner,
-  Product,
+  Pengepul,
+  Pengrajin,
+  WasteOffer,
+  WasteFacility,
 } from "@/app/components/dashboard/types/map.types";
 import { createPopupContent } from "@/app/components/dashboard/utils/popupTemplates";
 
 export const markerCreators = {
-  createStoreMarkers: (stores: Store[], layerGroup: L.LayerGroup) => {
+  createPengepulMarkers: (pengepuls: Pengepul[], layerGroup: L.LayerGroup) => {
     layerGroup.clearLayers();
 
-    stores.forEach((store: Store) => {
-      if (store.latitude && store.longitude) {
+    pengepuls.forEach((pengepul: Pengepul) => {
+      if (pengepul.user.latitude && pengepul.user.longitude) {
         const markerIcon = L.icon({
-          iconUrl: "/marker/store.svg",
+          iconUrl: "/marker/pengepul.svg",
           iconSize: [32, 32],
           iconAnchor: [16, 32],
           popupAnchor: [0, -32],
         });
 
-        const marker = L.marker([store.latitude, store.longitude], {
-          icon: markerIcon,
-        });
+        const marker = L.marker(
+          [pengepul.user.latitude, pengepul.user.longitude],
+          { icon: markerIcon }
+        );
 
-        const popupContent = createPopupContent.store(store);
-        marker.bindPopup(popupContent, { minWidth: 256 });
-        marker.addTo(layerGroup);
-      }
-    });
-  },
-
-  createPartnerMarkers: (partners: Partner[], layerGroup: L.LayerGroup) => {
-    layerGroup.clearLayers();
-
-    partners.forEach((partner: Partner) => {
-      if (partner.latitude && partner.longitude) {
-        const markerIcon = L.icon({
-          iconUrl: "/marker/mitra.svg",
-          iconSize: [32, 32],
-          iconAnchor: [16, 32],
-          popupAnchor: [0, -32],
-        });
-
-        const marker = L.marker([partner.latitude, partner.longitude], {
-          icon: markerIcon,
-        });
-
-        const popupContent = createPopupContent.partner(partner);
+        const popupContent = createPopupContent.pengepul(pengepul);
         marker.bindPopup(popupContent, {
           minWidth: 288,
           maxWidth: 320,
-          className: "custom-popup",
+          className: "pengepul-popup",
         });
         marker.addTo(layerGroup);
       }
     });
   },
 
-  // NEW: Create product markers for stores selling specific products
-  createProductMarkers: (
-    stores: Store[],
-    product: Product,
+  createPengrajinMarkers: (
+    pengrajins: Pengrajin[],
     layerGroup: L.LayerGroup
   ) => {
     layerGroup.clearLayers();
 
-    stores.forEach((store: Store) => {
-      if (store.latitude && store.longitude) {
+    pengrajins.forEach((pengrajin: Pengrajin) => {
+      if (pengrajin.workshopLatitude && pengrajin.workshopLongitude) {
+        const markerIcon = L.icon({
+          iconUrl: "/marker/pengrajin.svg",
+          iconSize: [32, 32],
+          iconAnchor: [16, 32],
+          popupAnchor: [0, -32],
+        });
+
+        const marker = L.marker(
+          [pengrajin.workshopLatitude, pengrajin.workshopLongitude],
+          { icon: markerIcon }
+        );
+
+        const popupContent = createPopupContent.pengrajin(pengrajin);
+        marker.bindPopup(popupContent, {
+          minWidth: 288,
+          maxWidth: 320,
+          className: "pengrajin-popup",
+        });
+        marker.addTo(layerGroup);
+      }
+    });
+  },
+
+  createWasteOfferMarkers: (
+    wasteOffers: WasteOffer[],
+    layerGroup: L.LayerGroup
+  ) => {
+    layerGroup.clearLayers();
+
+    wasteOffers.forEach((offer: WasteOffer) => {
+      if (offer.latitude && offer.longitude) {
         const markerIcon = L.icon({
           iconUrl: "/marker/products.svg",
           iconSize: [32, 32],
@@ -75,14 +82,15 @@ export const markerCreators = {
           popupAnchor: [0, -32],
         });
 
-        const marker = L.marker([store.latitude, store.longitude], {
+        const marker = L.marker([offer.latitude, offer.longitude], {
           icon: markerIcon,
         });
 
-        const popupContent = createPopupContent.productStore(store, product);
+        const popupContent = createPopupContent.wasteOffer(offer);
         marker.bindPopup(popupContent, {
-          minWidth: 256,
-          className: "product-popup",
+          minWidth: 288,
+          maxWidth: 320,
+          className: "waste-offer-popup",
         });
         marker.addTo(layerGroup);
       }
@@ -90,25 +98,31 @@ export const markerCreators = {
   },
 
   createWasteFacilityMarkers: (
-    facilities: any[],
+    facilities: WasteFacility[],
     layerGroup: L.LayerGroup,
     iconPath: string
   ) => {
     layerGroup.clearLayers();
 
-    facilities.forEach((facility) => {
-      const marker = L.marker([facility.latitude, facility.longitude], {
-        icon: L.icon({
-          iconUrl: iconPath,
-          iconSize: [32, 32],
-          iconAnchor: [16, 32],
-          popupAnchor: [0, -32],
-        }),
-      });
+    facilities.forEach((facility: WasteFacility) => {
+      if (facility.latitude && facility.longitude) {
+        const marker = L.marker([facility.latitude, facility.longitude], {
+          icon: L.icon({
+            iconUrl: iconPath,
+            iconSize: [32, 32],
+            iconAnchor: [16, 32],
+            popupAnchor: [0, -32],
+          }),
+        });
 
-      const popupContent = createPopupContent.wasteFacility(facility);
-      marker.bindPopup(popupContent);
-      marker.addTo(layerGroup);
+        const popupContent = createPopupContent.wasteFacility(facility);
+        marker.bindPopup(popupContent, {
+          minWidth: 280,
+          maxWidth: 320,
+          className: "waste-facility-popup",
+        });
+        marker.addTo(layerGroup);
+      }
     });
   },
 };

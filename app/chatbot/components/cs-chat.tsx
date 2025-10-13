@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
@@ -40,15 +41,16 @@ const CsChat: React.FC<CsChatProps> = ({ userEmail, userName, onBack }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const pollingRef = useRef<NodeJS.Timeout | null>(null);
+  const lastMessageCountRef = useRef(0);
 
   // Load chat history saat component mount
   useEffect(() => {
     loadChatHistory();
 
-    // Setup polling untuk cek pesan baru setiap 3 detik
+    // Setup polling untuk cek pesan baru setiap 5 detik (lebih hemat resource)
     pollingRef.current = setInterval(() => {
-      loadChatHistory();
-    }, 3000);
+      loadChatHistory(true); // Silent refresh
+    }, 5000);
 
     return () => {
       if (pollingRef.current) {
@@ -64,7 +66,7 @@ const CsChat: React.FC<CsChatProps> = ({ userEmail, userName, onBack }) => {
     }
   }, [messages, fetchLoading]);
 
-  const loadChatHistory = async () => {
+  const loadChatHistory = async (silent = false) => {
     try {
       const response = await fetch(
         `/api/cs-chat/history?email=${encodeURIComponent(userEmail)}`
@@ -78,7 +80,7 @@ const CsChat: React.FC<CsChatProps> = ({ userEmail, userName, onBack }) => {
         if (data.messages.length === 0) {
           formattedMessages.push({
             id: "cs-initial",
-            text: "Halo! Anda terhubung dengan Customer Service. Ada yang bisa kami bantu?",
+            text: `Halo ${userName}! 👋 Anda terhubung dengan Customer Service Daurin. Ada yang bisa kami bantu?`,
             sender: "bot",
           });
         }
@@ -102,20 +104,35 @@ const CsChat: React.FC<CsChatProps> = ({ userEmail, userName, onBack }) => {
           }
         });
 
+        // Notif jika ada pesan baru dari CS (saat polling)
+        if (silent && formattedMessages.length > lastMessageCountRef.current) {
+          const newMessages =
+            formattedMessages.length - lastMessageCountRef.current;
+          if (newMessages > 0) {
+            toast.success(`${newMessages} pesan baru dari CS!`, {
+              icon: "💬",
+            });
+          }
+        }
+
+        lastMessageCountRef.current = formattedMessages.length;
         setMessages(formattedMessages);
       }
     } catch (error) {
       console.error("Error loading chat history:", error);
-      // Set default message jika error
-      setMessages([
-        {
-          id: "cs-initial",
-          text: "Halo! Anda terhubung dengan Customer Service. Ada yang bisa kami bantu?",
-          sender: "bot",
-        },
-      ]);
+      if (!silent) {
+        setMessages([
+          {
+            id: "cs-initial",
+            text: `Halo ${userName}! 👋 Anda terhubung dengan Customer Service Daurin. Ada yang bisa kami bantu?`,
+            sender: "bot",
+          },
+        ]);
+      }
     } finally {
-      setFetchLoading(false);
+      if (!silent) {
+        setFetchLoading(false);
+      }
     }
   };
 
@@ -123,14 +140,17 @@ const CsChat: React.FC<CsChatProps> = ({ userEmail, userName, onBack }) => {
     e.preventDefault();
     if (!inputValue.trim() || isLoading) return;
 
+    const messageText = inputValue.trim();
+    setInputValue(""); // Clear input immediately
+    setIsLoading(true);
+
     const userMessage: MessageData = {
       id: Date.now().toString() + "-user",
-      text: inputValue,
+      text: messageText,
       sender: "user",
     };
 
     setMessages((prev) => [...prev, userMessage]);
-    setIsLoading(true);
 
     try {
       const response = await fetch("/api/cs-chat", {
@@ -139,33 +159,35 @@ const CsChat: React.FC<CsChatProps> = ({ userEmail, userName, onBack }) => {
         body: JSON.stringify({
           userEmail,
           userName,
-          message: inputValue,
+          message: messageText,
         }),
       });
 
       if (response.ok) {
         const confirmMessage: MessageData = {
           id: Date.now().toString() + "-confirm",
-          text: "Pesan Anda telah diterima. CS kami akan segera merespon.",
+          text: "✅ Pesan terkirim! CS kami akan segera merespon.",
           sender: "bot",
         };
 
         setMessages((prev) => [...prev, confirmMessage]);
-        setInputValue("");
 
         // Refresh chat history setelah 1 detik
         setTimeout(() => {
-          loadChatHistory();
+          loadChatHistory(true);
         }, 1000);
+      } else {
+        throw new Error("Failed to send message");
       }
     } catch (error) {
       console.error("Error sending CS message:", error);
       const errorMessage: MessageData = {
         id: Date.now().toString() + "-error",
-        text: "Gagal mengirim pesan. Silakan coba lagi.",
+        text: "❌ Gagal mengirim pesan. Silakan coba lagi.",
         sender: "bot",
       };
       setMessages((prev) => [...prev, errorMessage]);
+      toast.error("Gagal mengirim pesan!");
     } finally {
       setIsLoading(false);
     }
@@ -183,10 +205,11 @@ const CsChat: React.FC<CsChatProps> = ({ userEmail, userName, onBack }) => {
         setMessages([
           {
             id: "cs-initial",
-            text: "Halo! Anda terhubung dengan Customer Service. Ada yang bisa kami bantu?",
+            text: `Halo ${userName}! 👋 Anda terhubung dengan Customer Service Daurin. Ada yang bisa kami bantu?`,
             sender: "bot",
           },
         ]);
+        lastMessageCountRef.current = 1;
         toast.success("Chat berhasil dihapus!");
       } else {
         toast.error("Gagal menghapus chat!");
@@ -202,7 +225,7 @@ const CsChat: React.FC<CsChatProps> = ({ userEmail, userName, onBack }) => {
       (t) => (
         <div style={{ padding: "8px" }}>
           <p style={{ margin: "0 0 12px 0", fontWeight: "500" }}>
-            Yakin ingin menghapus semua chat?
+            Yakin ingin menghapus semua riwayat chat?
           </p>
           <div
             style={{ display: "flex", gap: "8px", justifyContent: "flex-end" }}
@@ -257,13 +280,13 @@ const CsChat: React.FC<CsChatProps> = ({ userEmail, userName, onBack }) => {
           <button onClick={onBack} className="back-btn">
             ←
           </button>
-          <h3>Customer Service</h3>
+          <h3>Customer Service Daurin</h3>
         </div>
-        <div className="loading">Loading chat history...</div>
+        <div className="loading">Memuat riwayat chat...</div>
         <Toaster
           position="top-center"
           toastOptions={{
-            duration: 4000,
+            duration: 3000,
             style: {
               background: "#363636",
               color: "#fff",
@@ -277,14 +300,14 @@ const CsChat: React.FC<CsChatProps> = ({ userEmail, userName, onBack }) => {
   return (
     <div className="cs-chat-container">
       <div className="chat-popup-header">
-        <button onClick={onBack} className="back-btn">
+        <button onClick={onBack} className="back-btn" title="Kembali">
           ←
         </button>
-        <h3>Customer Service</h3>
+        <h3>Customer Service Daurin</h3>
         <button
           onClick={handleDeleteChat}
           className="delete-chat-btn"
-          title="Hapus Chat"
+          title="Hapus Semua Chat"
         >
           🗑️
         </button>
@@ -313,7 +336,7 @@ const CsChat: React.FC<CsChatProps> = ({ userEmail, userName, onBack }) => {
           type="text"
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
-          placeholder="Ketik pesan untuk CS..."
+          placeholder="Ketik pesan untuk Customer Service..."
           disabled={isLoading}
         />
         <button type="submit" disabled={isLoading || !inputValue.trim()}>
@@ -324,7 +347,7 @@ const CsChat: React.FC<CsChatProps> = ({ userEmail, userName, onBack }) => {
       <Toaster
         position="top-center"
         toastOptions={{
-          duration: 4000,
+          duration: 3000,
           style: {
             background: "#363636",
             color: "#fff",

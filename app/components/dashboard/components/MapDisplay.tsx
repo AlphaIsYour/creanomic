@@ -36,23 +36,28 @@ interface MapComponentProps {
 export default function MapComponent({ onDistrictsLoaded }: MapComponentProps) {
   const mapRef = useRef<L.Map | null>(null);
   const layerGroupsRef = useRef<{ [key: string]: L.LayerGroup }>({});
-  const wasteOfferLayerRef = useRef<L.LayerGroup | null>(null);
-  const pengepulLayerRef = useRef<L.LayerGroup | null>(null);
-  const pengrajinLayerRef = useRef<L.LayerGroup | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [layers, setLayers] = useState(layerConfigs);
   const [districts, setDistricts] = useState<string[]>([]);
 
+  // UPDATE 1 & 2: Destructure useMapData dengan props baru + hapus duplicate refs
   const {
     loading,
     showPengepuls,
     showPengrajins,
+    showWasteOffers,
     wasteFacilities,
+    pengepulLayerRef,
+    pengrajinLayerRef,
+    wasteOfferLayerRef,
     setShowPengepuls,
     setShowPengrajins,
+    setShowWasteOffers,
     fetchWasteFacilities,
     loadPengepuls,
     loadPengrajins,
+    loadWasteOffers,
+    initializeLayers,
   } = useMapData(mapRef);
 
   const { userLocation, isLocating, locationError, getUserLocation } =
@@ -143,7 +148,8 @@ export default function MapComponent({ onDistrictsLoaded }: MapComponentProps) {
       if (!mapElement || mapRef.current) return;
 
       const map = L.map("map", {
-        zoomControl: false, // Disable zoom control (+/- buttons)
+        zoomControl: false,
+        attributionControl: false,
       }).setView([-7.9666, 112.6326], 10);
       mapRef.current = map;
 
@@ -251,13 +257,13 @@ export default function MapComponent({ onDistrictsLoaded }: MapComponentProps) {
   
                 <div class="p-4 space-y-4">
                   <div class="grid grid-cols-2 gap-3">
-                    <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-3 rounded-lg border border-blue-200">
-                      <div class="text-xs font-medium text-blue-600 uppercase tracking-wide mb-1">Kelurahan</div>
-                      <div class="text-lg font-bold text-blue-800">${jumlahKelurahan}</div>
+                    <div class="bg-[#8c10072e] p-3 rounded-lg border border-blue-200">
+                      <div class="text-xs font-medium text-white uppercase tracking-wide mb-1">Kelurahan</div>
+                      <div class="text-lg font-bold text-white">${jumlahKelurahan}</div>
                     </div>
-                    <div class="bg-gradient-to-br from-green-50 to-green-100 p-3 rounded-lg border border-green-200">
-                      <div class="text-xs font-medium text-green-600 uppercase tracking-wide mb-1">Desa</div>
-                      <div class="text-lg font-bold text-green-800">${jumlahDesa}</div>
+                    <div class="bg-[#8c10072e] p-3 rounded-lg border border-green-200">
+                      <div class="text-xs font-medium text-white uppercase tracking-wide mb-1">Desa</div>
+                      <div class="text-lg font-bold text-white">${jumlahDesa}</div>
                     </div>
                   </div>
   
@@ -307,11 +313,8 @@ export default function MapComponent({ onDistrictsLoaded }: MapComponentProps) {
         layerGroupsRef.current[layerConfig.id] = layerGroup;
       });
 
-      if (mapRef.current) {
-        wasteOfferLayerRef.current = L.layerGroup().addTo(mapRef.current);
-        pengepulLayerRef.current = L.layerGroup().addTo(mapRef.current);
-        pengrajinLayerRef.current = L.layerGroup().addTo(mapRef.current);
-      }
+      // UPDATE 3 & 4: Panggil initializeLayers() dan hapus manual initialization
+      initializeLayers();
 
       const uniqueDistricts = Array.from(
         new Set(
@@ -322,7 +325,6 @@ export default function MapComponent({ onDistrictsLoaded }: MapComponentProps) {
       );
       setDistricts(uniqueDistricts);
 
-      // Call the callback to pass districts to parent (only once on mount)
       if (onDistrictsLoaded && uniqueDistricts.length > 0) {
         onDistrictsLoaded(uniqueDistricts);
       }
@@ -349,7 +351,7 @@ export default function MapComponent({ onDistrictsLoaded }: MapComponentProps) {
         delete (window as any).showRoute;
       }
     };
-  }, []); // Remove onDistrictsLoaded from dependency to prevent re-initialization
+  }, []);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -371,11 +373,23 @@ export default function MapComponent({ onDistrictsLoaded }: MapComponentProps) {
     }
   }, [routing, showCustomToast]);
 
-  // Expose functions to window for sidebar access
+  // UPDATE 5 & 6: Tambah toggleWasteOffers dan update getState
   useEffect(() => {
     if (typeof window !== "undefined") {
       (window as any).mapControls = {
+        toggleWasteOffers: async () => {
+          console.log("Toggle Waste Offers!", showWasteOffers);
+          setShowWasteOffers((prev) => !prev);
+          if (!showWasteOffers) {
+            await loadWasteOffers();
+          } else {
+            if (wasteOfferLayerRef.current) {
+              wasteOfferLayerRef.current.clearLayers();
+            }
+          }
+        },
         togglePengepul: async () => {
+          console.log("Toggle Pengepul!", showPengepuls);
           setShowPengepuls((prev) => !prev);
           if (!showPengepuls) {
             await loadPengepuls();
@@ -386,6 +400,7 @@ export default function MapComponent({ onDistrictsLoaded }: MapComponentProps) {
           }
         },
         togglePengrajin: async () => {
+          console.log("Toggle Pengrajin!", showPengrajins);
           setShowPengrajins((prev) => !prev);
           if (!showPengrajins) {
             await loadPengrajins();
@@ -433,8 +448,10 @@ export default function MapComponent({ onDistrictsLoaded }: MapComponentProps) {
         getState: () => ({
           showPengepuls,
           showPengrajins,
+          showWasteOffers,
           loadingPengepuls: loading.pengepuls,
           loadingPengrajins: loading.pengrajins,
+          loadingWasteOffers: loading.wasteOffers,
           isLocating,
           layers,
           isRoutingEnabled: routing.isRoutingEnabled,
@@ -444,8 +461,10 @@ export default function MapComponent({ onDistrictsLoaded }: MapComponentProps) {
   }, [
     showPengepuls,
     showPengrajins,
+    showWasteOffers,
     loading.pengepuls,
     loading.pengrajins,
+    loading.wasteOffers,
     isLocating,
     layers,
     routing,
@@ -485,10 +504,8 @@ export default function MapComponent({ onDistrictsLoaded }: MapComponentProps) {
         <MapSkeleton />
       ) : (
         <>
-          {/* Full Screen Map */}
           <div id="map" className="absolute inset-0" style={{ zIndex: 0 }} />
 
-          {/* Routing Status Indicator */}
           <div className="absolute bottom-4 left-4 bg-white rounded-lg shadow-lg p-2 z-[1000]">
             <div className="flex items-center text-xs text-gray-600">
               <div

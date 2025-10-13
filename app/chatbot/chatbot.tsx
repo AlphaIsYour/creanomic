@@ -11,7 +11,7 @@ const Chatbot: React.FC = () => {
   const [messages, setMessages] = useState<MessageData[]>([
     {
       id: "initial-1",
-      text: "Halo! Saya Eco Helper, asisten AI untuk platform BekasinAja! Ada yang bisa saya bantu terkait produk bekas, mitra reparasi, atau informasi lainnya? 🌱",
+      text: "Halo! Saya Eco Assistant dari Creanomic! 🌱 Ada yang bisa aku bantu terkait limbah, pengepul, kerajinan daur ulang, atau hal lainnya?",
       sender: "bot",
     },
   ]);
@@ -21,7 +21,7 @@ const Chatbot: React.FC = () => {
     setIsOpen(!isOpen);
   };
 
-  // Function to parse streaming response from AI SDK
+  // Improved streaming response parser
   const parseStreamingResponse = async (
     response: Response
   ): Promise<string> => {
@@ -39,18 +39,35 @@ const Chatbot: React.FC = () => {
         if (done) break;
 
         const chunk = decoder.decode(value, { stream: true });
+        console.log("📦 Raw chunk:", chunk.substring(0, 200)); // DEBUG
+
         const lines = chunk.split("\n");
 
         for (const line of lines) {
-          if (line.startsWith('0:"') && line.endsWith('"')) {
-            // Extract text from streaming format: 0:"text content"
-            const text = line.slice(3, -1); // Remove '0:"' and closing '"'
-            // Unescape common characters
-            const unescapedText = text
-              .replace(/\\"/g, '"')
-              .replace(/\\n/g, "\n")
-              .replace(/\\t/g, "\t");
-            result += unescapedText;
+          if (!line.trim()) continue;
+
+          console.log("📝 Processing line:", line.substring(0, 100)); // DEBUG
+
+          // Handle SSE format: data: ...
+          if (line.startsWith("data: ")) {
+            const content = line.substring(6).trim();
+            if (content && content !== "[DONE]") {
+              result += content;
+              console.log("✅ Added from SSE:", content.substring(0, 50)); // DEBUG
+            }
+          }
+          // Handle AI SDK format: 0:"text"
+          else if (line.startsWith("0:")) {
+            const content = line.substring(2).trim();
+            if (content.startsWith('"') && content.endsWith('"')) {
+              const text = content
+                .slice(1, -1)
+                .replace(/\\"/g, '"')
+                .replace(/\\n/g, "\n")
+                .replace(/\\\\/g, "\\");
+              result += text;
+              console.log("✅ Added from AI SDK:", text.substring(0, 50)); // DEBUG
+            }
           }
         }
       }
@@ -58,6 +75,7 @@ const Chatbot: React.FC = () => {
       reader.releaseLock();
     }
 
+    console.log("🎯 Final result:", result.substring(0, 200)); // DEBUG
     return result.trim();
   };
 
@@ -88,6 +106,8 @@ const Chatbot: React.FC = () => {
         },
       ];
 
+      console.log("📤 Sending to API:", formattedMessages);
+
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -96,47 +116,60 @@ const Chatbot: React.FC = () => {
         }),
       });
 
+      console.log("📥 Response status:", response.status);
+      console.log("📥 Content-Type:", response.headers.get("content-type"));
+
       if (!response.ok) {
         throw new Error(`API error: ${response.statusText}`);
       }
 
       let botText = "";
-
-      // Check if response is streaming or regular
       const contentType = response.headers.get("content-type");
 
-      if (contentType?.includes("text/plain")) {
+      // Check if it's an error JSON response
+      if (contentType?.includes("application/json")) {
+        try {
+          const jsonData = await response.json();
+          if (jsonData.error) {
+            botText = jsonData.message || "Terjadi kesalahan pada server";
+          } else {
+            botText = jsonData.text || jsonData.message || "";
+          }
+        } catch (e) {
+          console.error("JSON parse error:", e);
+        }
+      } else if (
+        contentType?.includes("text/plain") ||
+        contentType?.includes("text/event-stream")
+      ) {
         // Handle streaming response
         try {
           botText = await parseStreamingResponse(response);
+          console.log("✅ Parsed streaming text:", botText.substring(0, 100));
         } catch (streamError) {
-          console.error("Streaming parse error:", streamError);
+          console.error("❌ Streaming parse error:", streamError);
           // Fallback to regular text parsing
           botText = await response.text();
         }
       } else {
-        // Handle regular JSON response
-        try {
-          const responseText = await response.text();
-          const data = JSON.parse(responseText);
-          botText = data.text || data.message || responseText;
-        } catch (parseError) {
-          console.error("JSON parse error:", parseError);
-          botText = await response.text();
-        }
+        // Fallback: try to get text directly
+        botText = await response.text();
       }
 
-      // Clean up any remaining streaming artifacts
+      // Clean up response
       botText = botText
-        .replace(/^f:\{[^}]*\}\s*/, "") // Remove metadata
-        .replace(/e:\{[^}]*\}\s*$/, "") // Remove end metadata
-        .replace(/d:\{[^}]*\}\s*$/, "") // Remove done metadata
-        .replace(/^\d+:"/, "") // Remove leading streaming markers
-        .replace(/"$/, "") // Remove trailing quotes
+        .replace(/^f:\{[^}]*\}\s*/g, "") // Remove metadata
+        .replace(/e:\{[^}]*\}\s*$/g, "") // Remove end metadata
+        .replace(/d:\{[^}]*\}\s*$/g, "") // Remove done metadata
         .trim();
 
-      if (!botText) {
-        botText = "Maaf, saya tidak dapat memproses permintaan Anda saat ini.";
+      console.log("🤖 Final bot text:", botText.substring(0, 100));
+
+      // Better fallback message
+      if (!botText || botText.length < 3) {
+        console.warn("⚠️ Empty response detected");
+        botText =
+          "Hmm, aku kesulitan memproses pertanyaan ini. Bisa diulang dengan kata-kata berbeda? 🤔";
       }
 
       const botMessage: MessageData = {
@@ -147,7 +180,7 @@ const Chatbot: React.FC = () => {
 
       setMessages((prevMessages) => [...prevMessages, botMessage]);
     } catch (error) {
-      console.error("Error sending message:", error);
+      console.error("❌ Error sending message:", error);
       const errorMessage: MessageData = {
         id: Date.now().toString() + "-error",
         text: "Waduh, sepertinya ada kendala teknis. Coba lagi dalam beberapa saat ya! 😅",
@@ -168,7 +201,7 @@ const Chatbot: React.FC = () => {
         messages={messages}
         onSendMessage={handleSendMessage}
         isLoading={isLoading}
-        botName="Eco Helper AI" // Update bot name
+        botName="Eco Assistant"
       />
     </>
   );

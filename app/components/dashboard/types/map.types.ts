@@ -146,3 +146,8 @@ export interface ProductSearchResponse {
   products: Product[];
   message: string;
 }
+
+export interface SearchMode {
+  type: "pengepul" | "pengrajin" | "waste-offers";
+  label: string;
+}

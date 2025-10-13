@@ -1,5 +1,7 @@
-/* eslint-disable prefer-const */
 /* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable prefer-const */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
 // app/api/chat/route.ts
 import { PrismaClient } from "@prisma/client";
 import { createGroq } from "@ai-sdk/groq";
@@ -12,767 +14,592 @@ const groq = createGroq({
   apiKey: process.env.GROQ_API_KEY,
 });
 
-// Helper function untuk format harga
+// Helper functions (tetap sama)
 function formatPrice(price: number): string {
   return `Rp ${price.toLocaleString("id-ID")}`;
 }
 
-// Helper function untuk condition mapping
-function getConditionText(condition: string): string {
-  const conditionMap: { [key: string]: string } = {
-    NEW_SEALED: "Baru/Segel",
-    LIKE_NEW: "Seperti Baru",
-    VERY_GOOD: "Sangat Bagus",
-    GOOD: "Bagus",
-    FAIR: "Cukup Bagus",
-  };
-  return conditionMap[condition] || condition;
-}
-
-// Helper function untuk generate product link
-function getProductLink(productId: string): string {
-  return `https://bekasinaja.com/product/${productId}`;
-}
-
-// Helper function untuk generate store link
-function getStoreLink(storeSlug: string | null): string {
-  return storeSlug ? `https://bekasinaja.com/store/${storeSlug}` : "#";
-}
-
-// Helper function untuk truncate text
 function truncateText(text: string, maxLength: number = 100): string {
   return text.length > maxLength ? text.substring(0, maxLength) + "..." : text;
 }
 
+function getMaterialTypeText(type: string): string {
+  const materialMap: { [key: string]: string } = {
+    PLASTIC: "Plastik",
+    GLASS: "Kaca",
+    METAL: "Logam",
+    PAPER: "Kertas",
+    CARDBOARD: "Kardus",
+    ELECTRONIC: "Elektronik",
+    TEXTILE: "Tekstil",
+    WOOD: "Kayu",
+    RUBBER: "Karet",
+    ORGANIC: "Organik",
+    OTHER: "Lainnya",
+  };
+  return materialMap[type] || type;
+}
+
+function getOfferStatusText(status: string): string {
+  const statusMap: { [key: string]: string } = {
+    AVAILABLE: "Tersedia",
+    RESERVED: "Direservasi",
+    TAKEN: "Diambil",
+    COMPLETED: "Selesai",
+    CANCELLED: "Dibatalkan",
+  };
+  return statusMap[status] || status;
+}
+
+function calculateDistance(
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number
+): number {
+  const R = 6371; // Radius bumi dalam km
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
 export async function POST(req: Request) {
-  const { messages }: { messages: CoreMessage[] } = await req.json();
+  try {
+    const { messages }: { messages: CoreMessage[] } = await req.json();
 
-  const lastUserMessage = messages[messages.length - 1];
-  const userQueryContent = lastUserMessage.content;
-  const userQuery =
-    typeof userQueryContent === "string" ? userQueryContent.toLowerCase() : "";
+    console.log("📩 Received messages:", messages.length);
 
-  let context = "";
-  let definitiveAnswer = "";
+    const lastUserMessage = messages[messages.length - 1];
+    let userQueryContent = lastUserMessage.content;
 
-  if (userQuery) {
+    // Simpan query original untuk AI
+    const originalQuery =
+      typeof userQueryContent === "string" ? userQueryContent.trim() : "";
+
+    // Query untuk keyword matching (lowercase, no special chars)
+    let userQuery =
+      typeof userQueryContent === "string"
+        ? userQueryContent
+            .toLowerCase()
+            .trim()
+            .replace(/[^a-z0-9\s]/g, "")
+        : "";
+
+    console.log("🔍 Cleaned user query:", userQuery);
+
+    // --- Handle greetings ---
+    const greetingKeywords = [
+      "halo",
+      "hai",
+      "hi",
+      "p",
+      "assalamualaikum",
+      "met pagi",
+      "met siang",
+      "met sore",
+      "met malem",
+      "selamat pagi",
+      "selamat siang",
+      "selamat sore",
+      "selamat malam",
+    ];
+
+    let directResponseContent: string | null = null;
+
+    // Cek apakah HANYA sapaan (tidak ada kata lain yang signifikan)
+    const isOnlyGreeting =
+      greetingKeywords.includes(userQuery) ||
+      (userQuery.split(" ").length <= 2 &&
+        greetingKeywords.some((g) => userQuery.includes(g)));
+
+    if (isOnlyGreeting) {
+      const greetings = [
+        "Hai juga! 👋 Aku Eco Assistant dari Creanomic, siap bantu kamu eksplor dunia daur ulang. Ada yang bisa aku bantuin hari ini?",
+        "Halo! 🌱 Senang kamu mampir! Aku Eco Assistant Creanomic. Kamu lagi nyari info apa nih seputar limbah atau kerajinan?",
+        "Wih, halo! Aku Eco Assistant, nih. Ada kabar baik apa nih dari dunia daur ulang yang bisa aku bantu cariin infonya buat kamu?",
+        "Eh, ada kamu! 👋 Aku Eco Assistant, nih. Yuk, ngobrolin daur ulang atau apa aja yang kamu mau tahu!",
+        "Selamat datang di Creanomic! Aku siap bantu kamu dengan info-info seru seputar limbah dan kerajinan. Mau mulai dari mana?",
+      ];
+      directResponseContent =
+        greetings[Math.floor(Math.random() * greetings.length)];
+    }
+
+    // Jika ada directResponseContent, kirimkan
+    if (directResponseContent) {
+      console.log("↩️ Sending direct response:", directResponseContent);
+      const encoder = new TextEncoder();
+      const readableStream = new ReadableStream({
+        start(controller) {
+          controller.enqueue(
+            encoder.encode(`data: ${directResponseContent}\n\n`)
+          );
+          controller.close();
+        },
+      });
+      return new Response(readableStream, {
+        headers: {
+          "Content-Type": "text/event-stream; charset=utf-8",
+          "Cache-Control": "no-cache",
+          Connection: "keep-alive",
+        },
+      });
+    }
+
+    // --- Fetch context dari database ---
+    let context = "";
+
     try {
-      // 1. Produk Terbaru
+      // 1. Limbah/Waste Offers
       if (
-        userQuery.includes("produk terbaru") ||
-        userQuery.includes("barang baru") ||
-        userQuery.includes("barang terbaru")
+        userQuery.includes("limbah") ||
+        userQuery.includes("sampah") ||
+        userQuery.includes("waste") ||
+        userQuery.includes("offer") ||
+        userQuery.includes("penawaran")
       ) {
-        const latestProducts = await prisma.product.findMany({
-          where: { isPublished: true, isSold: false },
+        const wasteOffers = await prisma.wasteOffer.findMany({
+          where: { status: "AVAILABLE" },
           orderBy: { createdAt: "desc" },
           take: 8,
           select: {
             id: true,
             title: true,
-            price: true,
             description: true,
-            condition: true,
-            locationCity: true,
-            locationProvince: true,
-            category: true,
-            subcategory: true,
-            images: true,
-            views: true,
+            materialType: true,
+            weight: true,
+            offerType: true,
+            suggestedPrice: true,
+            address: true,
+            status: true,
             createdAt: true,
-            seller: {
+            user: {
               select: {
                 name: true,
-                storeProfile: {
-                  select: {
-                    storeName: true,
-                    slug: true,
-                  },
-                },
+                phone: true,
               },
             },
           },
         });
 
-        if (latestProducts.length > 0) {
-          context = `Berikut adalah ${latestProducts.length} produk terbaru yang tersedia:\n\n${latestProducts
-            .map((p, i) => {
-              const storeName =
-                p.seller.storeProfile?.storeName ||
-                p.seller.name ||
-                "Toko Pribadi";
-              const storeLink = getStoreLink(
-                p.seller.storeProfile?.slug || null
-              );
-              const productLink = getProductLink(p.id);
-              const location =
-                p.locationCity && p.locationProvince
-                  ? `${p.locationCity}, ${p.locationProvince}`
-                  : p.locationCity || "Lokasi tidak disebutkan";
-
-              return `${i + 1}. **${p.title}**
-   - 💰 Harga: ${formatPrice(p.price)}
-   - 📱 Kondisi: ${getConditionText(p.condition)}
-   - 📂 Kategori: ${p.category}${p.subcategory ? ` > ${p.subcategory}` : ""}
-   - 📍 Lokasi: ${location}
-   - 🏪 Toko: [${storeName}](${storeLink})
-   - 👀 Views: ${p.views}
-   - 🔗 [Lihat Produk](${productLink})
-   - 📝 ${truncateText(p.description)}`;
+        if (wasteOffers.length > 0) {
+          context = `DATA PENAWARAN LIMBAH TERBARU:\n\n${wasteOffers
+            .map((w, i) => {
+              const offerType = w.offerType === "SELL" ? "Dijual" : "Donasi";
+              const price = w.suggestedPrice
+                ? formatPrice(w.suggestedPrice)
+                : "Gratis (Donasi)";
+              return `${i + 1}. ${w.title}
+   - Jenis: ${getMaterialTypeText(w.materialType)}
+   - Berat: ${w.weight ? `${w.weight} kg` : "Belum ditentukan"}
+   - ${offerType}: ${price}
+   - Lokasi: ${w.address}
+   - Penawar: ${w.user.name || "Pengguna"}
+   - Kontak: ${w.user.phone || "Hubungi via platform"}
+   - Deskripsi: ${truncateText(w.description)}`;
             })
             .join("\n\n")}`;
         }
       }
 
-      // 2. Pencarian Produk Berdasarkan Kategori/Keyword + Filter Harga
+      // 2. Pengepul
       else if (
-        userQuery.includes("termurah") ||
-        userQuery.includes("termahal") ||
-        userQuery.includes("harga") ||
-        /\d+\s*(produk|barang)/.test(userQuery) ||
-        userQuery.includes("cari") ||
-        userQuery.includes("mau")
+        userQuery.includes("pengepul") ||
+        userQuery.includes("collector") ||
+        userQuery.includes("ambil limbah") ||
+        userQuery.includes("daurin")
       ) {
-        // Extract keyword
-        const keywords = [
-          "botol",
-          "hp",
-          "handphone",
-          "smartphone",
-          "laptop",
-          "sepeda",
-          "baju",
-          "tas",
-          "elektronik",
-          "furniture",
-          "mainan",
-          "buku",
-          "kamera",
-          "motor",
-          "mobil",
-          "jam",
-          "sepatu",
-          "headphone",
-        ];
-        const foundKeyword = keywords.find((k) => userQuery.includes(k));
+        const pengepuls = await prisma.pengepulProfile.findMany({
+          where: { approvalStatus: "APPROVED" },
+          orderBy: { averageRating: "desc" },
+          take: 6,
+          select: {
+            id: true,
+            companyName: true,
+            specializedMaterials: true,
+            operatingArea: true,
+            operatingRadius: true,
+            description: true,
+            whatsappNumber: true,
+            averageRating: true,
+            totalCollections: true,
+            totalWeight: true,
+            workingHours: true,
+            user: {
+              select: {
+                name: true,
+                phone: true,
+                address: true,
+              },
+            },
+          },
+        });
 
-        // Extract jumlah yang diminta
-        const countMatch = userQuery.match(/(\d+)\s*(produk|barang)/);
-        const requestedCount = countMatch ? parseInt(countMatch[1]) : 6;
-
-        const sortOrder = userQuery.includes("termurah")
-          ? "asc"
-          : userQuery.includes("termahal")
-            ? "desc"
-            : "desc";
-
-        let whereCondition: any = {
-          isPublished: true,
-          isSold: false,
-        };
-
-        if (foundKeyword) {
-          whereCondition.OR = [
-            { title: { contains: foundKeyword, mode: "insensitive" } },
-            { description: { contains: foundKeyword, mode: "insensitive" } },
-            { category: { contains: foundKeyword, mode: "insensitive" } },
-            { subcategory: { contains: foundKeyword, mode: "insensitive" } },
-          ];
+        if (pengepuls.length > 0) {
+          context = `DATA PENGEPUL TERVERIFIKASI:\n\n${pengepuls
+            .map((p, i) => {
+              const materials = p.specializedMaterials
+                .map((m) => getMaterialTypeText(m))
+                .join(", ");
+              const areas = p.operatingArea.join(", ");
+              return `${i + 1}. ${p.companyName || p.user.name}
+   - Rating: ${p.averageRating.toFixed(1)}/5.0 (${p.totalCollections} koleksi)
+   - Spesialisasi: ${materials}
+   - Area Operasi: ${areas}
+   - Radius: ${p.operatingRadius ? `${p.operatingRadius} km` : "Fleksibel"}
+   - Total Terkumpul: ${p.totalWeight} kg
+   - WhatsApp: ${p.whatsappNumber || p.user.phone || "-"}
+   - Jam Kerja: ${p.workingHours || "Hubungi untuk info"}
+   - Deskripsi: ${truncateText(p.description || "Pengepul terpercaya")}`;
+            })
+            .join("\n\n")}`;
         }
+      }
 
-        const products = await prisma.product.findMany({
-          where: whereCondition,
-          orderBy: { price: sortOrder },
-          take: requestedCount,
+      // 3. Kerajinan
+      else if (
+        userQuery.includes("pengrajin") ||
+        userQuery.includes("kerajinan") ||
+        userQuery.includes("craft") ||
+        userQuery.includes("produk") ||
+        userQuery.includes("buatan")
+      ) {
+        const products = await prisma.craftProduct.findMany({
+          where: { status: "PUBLISHED", stock: { gt: 0 } },
+          orderBy: { createdAt: "desc" },
+          take: 8,
           select: {
             id: true,
             title: true,
+            description: true,
             price: true,
-            condition: true,
-            locationCity: true,
-            locationProvince: true,
+            materials: true,
+            dimensions: true,
+            stock: true,
             category: true,
-            subcategory: true,
-            views: true,
-            seller: {
+            customizable: true,
+            pengrajin: {
               select: {
-                name: true,
-                storeProfile: {
+                user: {
                   select: {
-                    storeName: true,
-                    slug: true,
+                    name: true,
                   },
                 },
+                workshopAddress: true,
+                averageRating: true,
+                instagramHandle: true,
+                whatsappNumber: true,
               },
             },
           },
         });
 
         if (products.length > 0) {
-          const sortText = userQuery.includes("termurah")
-            ? "termurah"
-            : userQuery.includes("termahal")
-              ? "termahal"
-              : "terbaru";
-          const keywordText = foundKeyword ? ` "${foundKeyword}"` : "";
-
-          context = `Berikut adalah ${products.length} produk${keywordText} ${sortText}:\n\n${products
+          context = `DATA PRODUK KERAJINAN DAUR ULANG:\n\n${products
             .map((p, i) => {
-              const storeName =
-                p.seller.storeProfile?.storeName ||
-                p.seller.name ||
-                "Toko Pribadi";
-              const storeLink = getStoreLink(
-                p.seller.storeProfile?.slug || null
-              );
-              const productLink = getProductLink(p.id);
-              const location =
-                p.locationCity && p.locationProvince
-                  ? `${p.locationCity}, ${p.locationProvince}`
-                  : p.locationCity || "Lokasi tidak disebutkan";
-
-              return `${i + 1}. **${p.title}**
-   - 💰 ${formatPrice(p.price)}
-   - 📱 ${getConditionText(p.condition)}
-   - 📂 ${p.category}${p.subcategory ? ` > ${p.subcategory}` : ""}
-   - 📍 ${location}
-   - 🏪 [${storeName}](${storeLink})
-   - 👀 ${p.views} views
-   - 🔗 [Lihat Detail](${productLink})`;
+              const materials = p.materials
+                .map((m) => getMaterialTypeText(m))
+                .join(", ");
+              return `${i + 1}. ${p.title}
+   - Harga: ${formatPrice(p.price)}
+   - Bahan: ${materials}
+   - Ukuran: ${p.dimensions || "Lihat deskripsi"}
+   - Stok: ${p.stock} pcs
+   - Kategori: ${p.category}
+   - Custom: ${p.customizable ? "Bisa custom" : "Standar"}
+   - Pengrajin: ${p.pengrajin.user.name}
+   - Rating: ${p.pengrajin.averageRating.toFixed(1)}/5.0
+   - Kontak: ${p.pengrajin.whatsappNumber || "-"}
+   - Deskripsi: ${truncateText(p.description)}`;
             })
             .join("\n\n")}`;
         }
       }
 
-      // 3. Mitra/Partner Terbaru
+      // 4. Custom/Booking
       else if (
-        userQuery.includes("mitra terbaru") ||
-        userQuery.includes("partner terbaru") ||
-        userQuery.includes("petani terbaru") ||
-        userQuery.includes("servis terbaru")
+        userQuery.includes("custom") ||
+        userQuery.includes("booking") ||
+        userQuery.includes("pesan") ||
+        userQuery.includes("buat") ||
+        userQuery.includes("order")
       ) {
-        const latestPartners = await prisma.partner.findMany({
-          where: { status: "APPROVED" },
-          orderBy: { createdAt: "desc" },
+        const pengrajins = await prisma.pengrajinProfile.findMany({
+          where: { approvalStatus: "APPROVED" },
+          orderBy: { averageRating: "desc" },
           take: 6,
           select: {
             id: true,
-            businessName: true,
-            location: true,
-            expertise: true,
+            craftTypes: true,
+            specializedMaterials: true,
+            yearsOfExperience: true,
             description: true,
-            phoneNumber: true,
-            email: true,
-            website: true,
-            instagram: true,
-            facebook: true,
+            whatsappNumber: true,
+            instagramHandle: true,
+            workshopAddress: true,
+            averageRating: true,
+            totalBookings: true,
             user: {
               select: {
                 name: true,
               },
             },
-            services: {
-              select: {
-                name: true,
-                price: true,
-              },
-              take: 3,
-            },
-            works: {
-              select: {
-                title: true,
-                category: true,
-              },
-              take: 2,
-            },
           },
         });
 
-        if (latestPartners.length > 0) {
-          context = `Berikut adalah ${latestPartners.length} mitra terbaru yang bergabung:\n\n${latestPartners
+        if (pengrajins.length > 0) {
+          context = `DATA PENGRAJIN UNTUK LAYANAN CUSTOM:\n\n${pengrajins
             .map((p, i) => {
-              const expertise = Array.isArray(p.expertise)
-                ? p.expertise.join(", ")
-                : "Tidak disebutkan";
-              const services =
-                p.services.length > 0
-                  ? p.services
-                      .map((s) => `${s.name}${s.price ? ` (${s.price})` : ""}`)
-                      .join(", ")
-                  : "Tidak ada layanan terdaftar";
-
-              return `${i + 1}. **${p.businessName}**
-   - 👤 Pemilik: ${p.user.name || "Tidak disebutkan"}
-   - 📍 Lokasi: ${p.location}
-   - 🔧 Keahlian: ${expertise}
-   - 📞 Kontak: ${p.phoneNumber}
-   - 📧 Email: ${p.email}
-   ${p.website ? `- 🌐 Website: ${p.website}` : ""}
-   ${p.instagram ? `- 📸 Instagram: @${p.instagram}` : ""}
-   - 🛠️ Layanan: ${services}
-   - 📝 ${truncateText(p.description, 120)}`;
+              const craftTypes = p.craftTypes.join(", ");
+              const materials = p.specializedMaterials
+                .map((m) => getMaterialTypeText(m))
+                .join(", ");
+              return `${i + 1}. ${p.user.name}
+   - Rating: ${p.averageRating.toFixed(1)}/5.0 (${p.totalBookings} booking)
+   - Keahlian: ${craftTypes}
+   - Spesialisasi Bahan: ${materials}
+   - Pengalaman: ${
+     p.yearsOfExperience ? `${p.yearsOfExperience} tahun` : "Berpengalaman"
+   }
+   - Workshop: ${p.workshopAddress || "Hubungi untuk info"}
+   - WhatsApp: ${p.whatsappNumber || "-"}
+   - Instagram: ${p.instagramHandle ? `@${p.instagramHandle}` : "-"}
+   - Deskripsi: ${truncateText(p.description || "Pengrajin profesional")}`;
             })
             .join("\n\n")}`;
         }
       }
 
-      // 4. Mitra/Servis berdasarkan lokasi atau keahlian
+      // 5. Statistik
       else if (
-        userQuery.includes("mitra") ||
-        userQuery.includes("servis") ||
-        userQuery.includes("partner") ||
-        userQuery.includes("reparasi") ||
-        userQuery.includes("perbaikan")
-      ) {
-        // Extract location or service type
-        const locations = [
-          "jakarta",
-          "bekasi",
-          "tangerang",
-          "depok",
-          "bogor",
-          "bandung",
-          "surabaya",
-        ];
-        const services = [
-          "elektronik",
-          "hp",
-          "laptop",
-          "ac",
-          "kulkas",
-          "motor",
-          "mobil",
-          "furniture",
-        ];
-
-        const foundLocation = locations.find((loc) => userQuery.includes(loc));
-        const foundService = services.find((svc) => userQuery.includes(svc));
-
-        let whereCondition: any = { status: "APPROVED" };
-
-        if (foundLocation) {
-          whereCondition.location = {
-            contains: foundLocation,
-            mode: "insensitive",
-          };
-        }
-
-        const partners = await prisma.partner.findMany({
-          where: whereCondition,
-          take: 6,
-          orderBy: { createdAt: "desc" },
-          select: {
-            id: true,
-            businessName: true,
-            location: true,
-            expertise: true,
-            phoneNumber: true,
-            email: true,
-            description: true,
-            services: {
-              select: {
-                name: true,
-                price: true,
-              },
-              take: 3,
-            },
-            works: {
-              select: {
-                title: true,
-                views: true,
-              },
-              orderBy: { views: "desc" },
-              take: 2,
-            },
-          },
-        });
-
-        if (partners.length > 0) {
-          const locationText = foundLocation
-            ? ` di ${foundLocation.charAt(0).toUpperCase() + foundLocation.slice(1)}`
-            : "";
-          const serviceText = foundService ? ` untuk ${foundService}` : "";
-
-          context = `Berikut mitra${serviceText}${locationText} yang tersedia:\n\n${partners
-            .map((p, i) => {
-              const expertise = Array.isArray(p.expertise)
-                ? p.expertise.join(", ")
-                : "Tidak disebutkan";
-              const services =
-                p.services.length > 0
-                  ? p.services
-                      .map((s) => `${s.name}${s.price ? ` (${s.price})` : ""}`)
-                      .join(", ")
-                  : "Hubungi untuk info layanan";
-              const popularWork =
-                p.works.length > 0 ? p.works[0].title : "Belum ada portfolio";
-
-              return `${i + 1}. **${p.businessName}**
-   - 📍 ${p.location}
-   - 🔧 Keahlian: ${expertise}
-   - 📞 ${p.phoneNumber}
-   - 📧 ${p.email}
-   - 🛠️ Layanan: ${services}
-   - 🏆 Portfolio Populer: ${popularWork}
-   - 📝 ${truncateText(p.description, 100)}`;
-            })
-            .join("\n\n")}`;
-        }
-      }
-
-      // 5. Statistik/Info Umum
-      else if (
+        userQuery.includes("statistik") ||
         userQuery.includes("berapa") ||
         userQuery.includes("total") ||
-        userQuery.includes("jumlah") ||
-        userQuery.includes("statistik") ||
-        userQuery.includes("data")
+        userQuery.includes("data") ||
+        userQuery.includes("jumlah")
       ) {
         const [
+          totalWasteOffers,
+          totalPengepuls,
+          totalPengrajins,
           totalProducts,
-          totalSoldProducts,
-          totalPartners,
           totalUsers,
-          totalOrders,
-          totalArticles,
-          popularCategories,
+          totalWasteCollected,
         ] = await Promise.all([
-          prisma.product.count({ where: { isPublished: true, isSold: false } }),
-          prisma.product.count({ where: { isSold: true } }),
-          prisma.partner.count({ where: { status: "APPROVED" } }),
-          prisma.user.count(),
-          prisma.order.count(),
-          prisma.article.count({ where: { status: "PUBLISHED" } }),
-          prisma.product.groupBy({
-            by: ["category"],
-            where: { isPublished: true },
-            _count: { category: true },
-            orderBy: { _count: { category: "desc" } },
-            take: 5,
+          prisma.wasteOffer.count({ where: { status: "AVAILABLE" } }),
+          prisma.pengepulProfile.count({
+            where: { approvalStatus: "APPROVED" },
+          }),
+          prisma.pengrajinProfile.count({
+            where: { approvalStatus: "APPROVED" },
+          }),
+          prisma.craftProduct.count({ where: { status: "PUBLISHED" } }),
+          prisma.user.count({ where: { isActive: true } }),
+          prisma.pengepulProfile.aggregate({
+            _sum: { totalWeight: true },
           }),
         ]);
 
-        const categoryStats = popularCategories
+        const materialStats = await prisma.wasteOffer.groupBy({
+          by: ["materialType"],
+          where: { status: { in: ["AVAILABLE", "RESERVED", "TAKEN"] } },
+          _count: { materialType: true },
+          orderBy: { _count: { materialType: "desc" } },
+          take: 5,
+        });
+
+        const materialList = materialStats
           .map(
-            (cat, i) =>
-              `${i + 1}. ${cat.category}: ${cat._count.category} produk`
+            (m, i) =>
+              `${i + 1}. ${getMaterialTypeText(m.materialType)}: ${
+                m._count.materialType
+              } penawaran`
           )
           .join("\n");
 
-        context = `📊 **Statistik BekasinAja saat ini:**
+        context = `STATISTIK PLATFORM CREANOMIC:
 
-🛍️ **Produk:**
-- Produk Aktif: ${totalProducts}
-- Produk Terjual: ${totalSoldProducts}
-- Total Transaksi: ${totalOrders}
+Limbah & Daur Ulang:
+- Penawaran Limbah Aktif: ${totalWasteOffers}
+- Total Limbah Terkumpul: ${totalWasteCollected._sum.totalWeight || 0} kg
+- Pengepul Terverifikasi: ${totalPengepuls}
 
-👥 **Komunitas:**
-- Total Pengguna: ${totalUsers}
-- Mitra Terdaftar: ${totalPartners}
-- Artikel Dipublikasi: ${totalArticles}
+Kerajinan:
+- Produk Tersedia: ${totalProducts}
+- Pengrajin Terverifikasi: ${totalPengrajins}
 
-📈 **Kategori Populer:**
-${categoryStats}
+Komunitas:
+- Total Pengguna Aktif: ${totalUsers}
 
-💡 **Tips:** Bergabunglah dengan komunitas BekasinAja untuk jual-beli barang bekas berkualitas dan temukan mitra terpercaya!`;
+Jenis Limbah Populer:
+${materialList}`;
       }
 
-      // 6. Artikel Terbaru
+      // 6. Lokasi
       else if (
-        userQuery.includes("artikel") ||
-        userQuery.includes("berita") ||
-        userQuery.includes("blog") ||
-        userQuery.includes("tips")
+        userQuery.includes("terdekat") ||
+        userQuery.includes("dekat") ||
+        userQuery.includes("lokasi") ||
+        userQuery.includes("sekitar")
       ) {
-        const articles = await prisma.article.findMany({
-          where: { status: "PUBLISHED" },
-          orderBy: { publishedAt: "desc" },
-          take: 5,
-          select: {
-            id: true,
-            title: true,
-            slug: true,
-            excerpt: true,
-            authorName: true,
-            publishedAt: true,
-            views: true,
-            category: {
-              select: {
-                name: true,
-              },
-            },
-            tags: {
-              select: {
-                name: true,
-              },
-              take: 3,
-            },
-          },
-        });
-
-        if (articles.length > 0) {
-          context = `📰 **Artikel Terbaru:**\n\n${articles
-            .map((a, i) => {
-              const articleLink = `https://bekasinaja.com/article/${a.slug}`;
-              const tags = a.tags.map((tag) => tag.name).join(", ");
-              const publishedDate = new Date(a.publishedAt!).toLocaleDateString(
-                "id-ID"
-              );
-
-              return `${i + 1}. **${a.title}**
-   - ✍️ Penulis: ${a.authorName}
-   - 📅 Dipublikasi: ${publishedDate}
-   - 📂 Kategori: ${a.category?.name || "Umum"}
-   - 🏷️ Tags: ${tags || "Tidak ada tag"}
-   - 👀 ${a.views} views
-   - 🔗 [Baca Artikel](${articleLink})
-   - 📝 ${a.excerpt ? truncateText(a.excerpt, 120) : "Tidak ada ringkasan"}`;
-            })
-            .join("\n\n")}`;
-        }
+        context = `Untuk mencari yang terdekat, aku butuh tahu lokasi kamu sekarang. Bisa kasih tahu kota/kabupaten atau izinkan akses lokasi? 😉`;
       }
 
-      // 7. Pencarian berdasarkan lokasi
+      // 7. Tips
       else if (
-        userQuery.includes("jakarta") ||
-        userQuery.includes("bekasi") ||
-        userQuery.includes("tangerang") ||
-        userQuery.includes("depok") ||
-        userQuery.includes("bogor") ||
-        userQuery.includes("bandung") ||
-        userQuery.includes("surabaya")
+        userQuery.includes("tips") ||
+        userQuery.includes("cara") ||
+        userQuery.includes("bagaimana") ||
+        userQuery.includes("tutorial") ||
+        userQuery.includes("info daur ulang")
       ) {
-        const cityKeywords = [
-          "jakarta",
-          "bekasi",
-          "tangerang",
-          "depok",
-          "bogor",
-          "bandung",
-          "surabaya",
-        ];
-        const foundCity = cityKeywords.find((city) => userQuery.includes(city));
+        context = `TIPS DAUR ULANG & PENGELOLAAN LIMBAH DARI CREANOMIC:
 
-        if (foundCity) {
-          const [productsInCity, partnersInCity, articlesInCity] =
-            await Promise.all([
-              prisma.product.findMany({
-                where: {
-                  isPublished: true,
-                  isSold: false,
-                  OR: [
-                    {
-                      locationCity: {
-                        contains: foundCity,
-                        mode: "insensitive",
-                      },
-                    },
-                    {
-                      locationProvince: {
-                        contains: foundCity,
-                        mode: "insensitive",
-                      },
-                    },
-                  ],
-                },
-                take: 4,
-                orderBy: { createdAt: "desc" },
-                select: {
-                  id: true,
-                  title: true,
-                  price: true,
-                  condition: true,
-                  seller: {
-                    select: {
-                      storeProfile: {
-                        select: { storeName: true, slug: true },
-                      },
-                    },
-                  },
-                },
-              }),
-              prisma.partner.findMany({
-                where: {
-                  status: "APPROVED",
-                  location: { contains: foundCity, mode: "insensitive" },
-                },
-                take: 3,
-                select: {
-                  businessName: true,
-                  location: true,
-                  phoneNumber: true,
-                  expertise: true,
-                },
-              }),
-              prisma.article.findMany({
-                where: {
-                  status: "PUBLISHED",
-                  location: { contains: foundCity, mode: "insensitive" },
-                },
-                take: 2,
-                select: {
-                  title: true,
-                  slug: true,
-                  authorName: true,
-                },
-              }),
-            ]);
+Memilah Limbah Itu Penting! 🗑️
+- Pisahkan berdasarkan jenis (plastik, kertas, logam, organik, dll.).
+- Pastikan limbah bersih dari sisa makanan/cairan biar nggak bau dan lebih gampang diproses.
+- Kalau bisa, lipat atau kempa limbah yang besar (misal botol plastik) untuk menghemat ruang.
+- Simpan di tempat kering dan tertutup sampai siap dikumpulkan.
 
-          const cityName =
-            foundCity.charAt(0).toUpperCase() + foundCity.slice(1);
-          let locationContext = `🏙️ **Informasi untuk area ${cityName}:**\n\n`;
+Jual atau Donasikan Limbahmu! 💰💖
+- Kumpulkan dalam jumlah yang cukup (biasanya minimal 5-10kg baru layak diangkut).
+- Ambil foto limbahmu dengan jelas untuk penawaran di platform.
+- Tentukan harga yang wajar atau pilih opsi donasi untuk kebaikan lingkungan.
+- Hubungi pengepul terverifikasi di Creanomic yang dekat dengan lokasimu.
 
-          if (productsInCity.length > 0) {
-            locationContext += `🛍️ **Produk Tersedia:**\n${productsInCity
-              .map((p, i) => {
-                const storeName =
-                  p.seller.storeProfile?.storeName || "Toko Pribadi";
-                const productLink = getProductLink(p.id);
-                return `${i + 1}. [${p.title}](${productLink}) - ${formatPrice(p.price)} (${getConditionText(p.condition)}) - ${storeName}`;
-              })
-              .join("\n")}\n\n`;
-          }
+Kreasikan Limbah Jadi Kerajinan! 🎨✨
+- Butuh inspirasi? Yuk, cek produk-produk pengrajin kami di platform!
+- Pilih bahan limbah yang masih bagus dan punya potensi untuk diubah.
+- Kalau mau bikin yang unik, konsultasi aja dengan pengrajin kami untuk custom order.
+- Mulai dari proyek sederhana dulu, siapa tahu jadi hobi baru!
 
-          if (partnersInCity.length > 0) {
-            locationContext += `🔧 **Mitra di Area Ini:**\n${partnersInCity
-              .map((p, i) => {
-                const expertise = Array.isArray(p.expertise)
-                  ? p.expertise.join(", ")
-                  : "Berbagai layanan";
-                return `${i + 1}. **${p.businessName}** - ${p.location}
-   📞 ${p.phoneNumber} | 🔧 ${expertise}`;
-              })
-              .join("\n")}\n\n`;
-          }
+Manfaat Daur Ulang yang Keren! 🌍💚
+- Mengurangi volume sampah di TPA (Tempat Pemrosesan Akhir), bumi jadi lebih lega!
+- Menghemat sumber daya alam baru karena kita pakai ulang bahan yang sudah ada.
+- Membuka lapangan kerja baru di sektor ekonomi kreatif dan pengelolaan limbah.
+- Menghasilkan produk unik, kreatif, dan bernilai jual tinggi.
 
-          if (articlesInCity.length > 0) {
-            locationContext += `📰 **Artikel Terkait:**\n${articlesInCity
-              .map(
-                (a, i) =>
-                  `${i + 1}. [${a.title}](https://bekasinaja.com/article/${a.slug}) - ${a.authorName}`
-              )
-              .join("\n")}`;
-          }
-
-          context = locationContext;
-        }
-      }
-
-      // 8. Toko/Store Information
-      else if (
-        userQuery.includes("toko") ||
-        userQuery.includes("penjual") ||
-        userQuery.includes("seller")
-      ) {
-        const stores = await prisma.storeProfile.findMany({
-          take: 6,
-          orderBy: { createdAt: "desc" },
-          select: {
-            storeName: true,
-            slug: true,
-            description: true,
-            location: true,
-            user: {
-              select: {
-                name: true,
-                productsSold: {
-                  where: { isPublished: true, isSold: false },
-                  select: { id: true },
-                },
-              },
-            },
-          },
-        });
-
-        if (stores.length > 0) {
-          context = `🏪 **Toko-toko Terpercaya:**\n\n${stores
-            .map((store, i) => {
-              const storeLink = getStoreLink(store.slug);
-              const productCount = store.user.productsSold.length;
-
-              return `${i + 1}. **[${store.storeName}](${storeLink})**
-   - 👤 Pemilik: ${store.user.name || "Tidak disebutkan"}
-   - 📍 Lokasi: ${store.location || "Tidak disebutkan"}
-   - 📦 Produk Aktif: ${productCount}
-   - 📝 ${store.description ? truncateText(store.description, 100) : "Tidak ada deskripsi"}`;
-            })
-            .join("\n\n")}`;
-        }
-      }
-
-      // Jika tidak ada data ditemukan
-      if (!context && !definitiveAnswer) {
-        definitiveAnswer =
-          "Maaf, aku tidak menemukan informasi yang sesuai dengan pertanyaan kamu. Coba tanya dengan kata kunci yang berbeda ya! 🤔\n\nKamu bisa coba tanya tentang:\n- Produk terbaru\n- Mitra di area tertentu\n- Statistik BekasinAja\n- Artikel atau tips\n- Produk berdasarkan kategori\n- Dan masih banyak lagi! 😊";
+Yuk, mulai aksi daur ulangmu sekarang! 😉`;
       }
     } catch (dbError) {
-      console.error("Database query error:", dbError);
-      definitiveAnswer =
-        "Duh, maaf banget, aku lagi ada kendala buat akses database. Coba tanya lagi beberapa saat ya! 🔧";
+      console.error("❌ Database query error:", dbError);
+      context =
+        "SYSTEM_ERROR: Database tidak dapat diakses saat ini. Maaf ya, aku lagi ada kendala teknis dari sisi database. Coba lagi nanti ya!";
     }
-  }
 
-  // Return definitive answer jika ada
-  if (definitiveAnswer) {
-    return new Response(JSON.stringify({ text: definitiveAnswer }), {
-      headers: { "Content-Type": "application/json" },
-    });
-  }
+    console.log("📊 Context fetched:", context ? "Yes" : "No");
+    console.log("📏 Context length:", context.length);
 
-  // Generate response dengan AI
-  const systemMessage: CoreMessage = {
-    role: "system",
-    content: `Kamu adalah Eco Helper, chatbot AI dari website BekasinAja yang super ramah dan helpful! 🌟
+    // System message untuk AI
+    const systemMessage: CoreMessage = {
+      role: "system",
+      content: `Kamu adalah Eco Assistant dari Creanomic yang ramah, asik, dan suka membantu! 🌱
 
-KEPRIBADIAN:
-- Selalu ramah, antusias, dan supportive
-- Gunakan emoji yang relevan tapi jangan berlebihan
-- Bicara seperti teman yang knowledgeable
-- Berikan informasi yang akurat dan berguna
+PERSONALITY:
+- Pakai "aku/kamu".
+- Respon dengan antusias tentang sustainability dan daur ulang.
+- Sering pakai emoji yang relevan (tapi jangan berlebihan).
+- Gunakan bahasa yang casual dan dekat dengan anak muda (misal: "yuk", "spill aja", "mantap").
+- Jika diberikan data, jelaskan dengan natural dan helpful.
+- Jika tidak ada data spesifik, jelaskan tentang Creanomic dan fitur-fiturnya dengan engaging.
 
-TUGAS UTAMA:
-- Membantu user cari produk bekas berkualitas
-- Mencarikan mitra reparasi terpercaya
-- Memberikan informasi terkini tentang BekasinAja
-- Memberikan tips sustainable living
+TENTANG CREANOMIC:
+Creanomic adalah platform ekonomi sirkular untuk daur ulang limbah di Indonesia. Di sini pengguna bisa:
+- Jual atau donasikan limbah ke pengepul terverifikasi
+- Beli produk kerajinan unik dari bahan daur ulang
+- Pesan custom craft dari pengrajin berpengalaman
+- Dapat tips dan edukasi tentang pengelolaan limbah
 
-FORMAT RESPONSE:
-- Gunakan markdown untuk struktur yang rapi
-- Sertakan link yang relevan
-- Tampilkan harga dengan format yang benar
-- Sebutkan nama toko dan lokasi dengan jelas
-- Berikan context yang helpful
+CAPABILITIES:
+- Info pengepul limbah terverifikasi
+- Produk kerajinan daur ulang
+- Custom craft booking
+- Tips daur ulang & pengelolaan limbah
+- Statistik platform Creanomic
 
-PENTING:
-- Semua harga sudah dalam format yang benar (jangan tambah nol)
-- Semua link sudah valid dan mengarah ke halaman yang tepat
-- Data yang diberikan sudah akurat dari database
-- Jangan sebutkan "[INFO DARI DATABASE]" atau hal teknis lainnya
+RESPONSE STYLE:
+- Natural & conversational
+- Variasi jawaban, jangan monoton
+- Gunakan markdown untuk struktur rapi
+- Selalu helpful dan encouraging
 
-${context ? `\nDATA TERKINI:\n${context}` : ""}
+${
+  context
+    ? `\nDATA TERSEDIA:\n${context}\n\nJelaskan data ini dengan cara yang menarik dan mudah dipahami!`
+    : "\nBelum ada data spesifik yang diminta. Jawab pertanyaan user dengan informasi umum tentang Creanomic atau bantu arahkan mereka untuk bertanya lebih spesifik."
+}`,
+    };
 
-Jawab dengan gaya yang natural, informatif, dan engaging! 💫`,
-  };
+    console.log("🤖 Calling Groq API...");
 
-  try {
     const result = await streamText({
-      model: groq("llama3-8b-8192"),
+      model: groq("llama-3.1-8b-instant"),
       messages: [systemMessage, ...messages],
-      temperature: 0.7,
-      maxTokens: 1500,
+      temperature: 0.8,
+      maxRetries: 3,
     });
-    return result.toDataStreamResponse();
-  } catch (error) {
-    console.error("Error dari Groq API:", error);
-    if (error instanceof Groq.APIError) {
-      return new Response(`Error dari Groq: ${error.message}`, {
-        status: error.status,
-      });
+
+    console.log("✅ Groq API success");
+
+    // Kumpulkan semua text dulu
+    let fullText = "";
+    for await (const chunk of result.textStream) {
+      fullText += chunk;
     }
+
+    // Kirim sebagai SSE
+    const encoder = new TextEncoder();
+    const stream = new ReadableStream({
+      start(controller) {
+        controller.enqueue(encoder.encode(`data: ${fullText}\n\n`));
+        controller.close();
+      },
+    });
+
+    return new Response(stream, {
+      headers: {
+        "Content-Type": "text/event-stream; charset=utf-8",
+        "Cache-Control": "no-cache",
+        Connection: "keep-alive",
+      },
+    });
+  } catch (error) {
+    console.error("❌ Error dari Groq API atau server:", error);
+
+    if (error instanceof Groq.APIError) {
+      console.error("Groq API Error details:", {
+        status: error.status,
+        message: error.message,
+        code: (error as any).code,
+      });
+      return new Response(
+        JSON.stringify({
+          error: true,
+          message: `Duh, ada masalah dari Groq nih: ${error.message}. Coba lagi bentar ya! 🙏`,
+        }),
+        {
+          status: error.status || 500,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    console.error("Unknown error type:", error);
     return new Response(
-      "Waduh, maaf banget, server AI lagi ada kendala. 🤖💔",
+      JSON.stringify({
+        error: true,
+        message:
+          "Oops, AI-ku lagi ada kendala teknis nih. Coba lagi sebentar ya! 🤖💫",
+      }),
       {
         status: 500,
+        headers: { "Content-Type": "application/json" },
       }
     );
   }

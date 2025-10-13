@@ -20,7 +20,7 @@ export async function DELETE(req: NextRequest) {
     }
 
     // Hapus semua pesan CS user ini
-    await prisma.csMessage.deleteMany({
+    await prisma.cSMessage.deleteMany({
       where: { userId: user.id },
     });
 

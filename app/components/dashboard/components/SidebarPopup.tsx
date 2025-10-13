@@ -177,13 +177,6 @@ export function SidebarPopup({ isOpen, onClose, user }: SidebarPopupProps) {
           },
         },
         {
-          id: "layers",
-          label: "Layer Informasi",
-          icon: Layers,
-          description: "Bank Sampah, TPA, dll",
-          onClick: () => setHoveredMenu("layer-details"),
-        },
-        {
           id: "my-location",
           label: mapState.isLocating ? "Mencari Lokasi..." : "Lokasi Saya",
           icon: MapPinIcon,

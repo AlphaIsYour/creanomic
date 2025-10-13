@@ -6,8 +6,9 @@ import { toast } from "sonner";
 import {
   Pengepul,
   Pengrajin,
+  WasteOffer,
   WasteFacility,
-  WasteFacilitiesResponse, // Import dari map.types.ts
+  WasteFacilitiesResponse,
 } from "@/app/components/dashboard/types/map.types";
 import { createPopupContent } from "@/app/components/dashboard/utils/popupTemplates";
 
@@ -20,9 +21,14 @@ interface PengrajinResponse {
   pengrajins: Pengrajin[];
 }
 
+interface WasteOfferResponse {
+  wasteOffers: WasteOffer[];
+}
+
 interface LoadingState {
   pengepuls: boolean;
   pengrajins: boolean;
+  wasteOffers: boolean;
   facilities: boolean;
 }
 
@@ -30,11 +36,13 @@ export const useMapData = (mapRef: React.MutableRefObject<L.Map | null>) => {
   const [loading, setLoading] = useState<LoadingState>({
     pengepuls: false,
     pengrajins: false,
+    wasteOffers: false,
     facilities: false,
   });
   const [showPengepuls, setShowPengepuls] = useState(false);
   const [showPengrajins, setShowPengrajins] = useState(false);
-  // Ubah tipe data wasteFacilities untuk menyimpan objek bersarang
+  const [showWasteOffers, setShowWasteOffers] = useState(false);
+
   const [wasteFacilities, setWasteFacilities] = useState<
     WasteFacilitiesResponse["facilities"] | null
   >(null);
@@ -42,9 +50,27 @@ export const useMapData = (mapRef: React.MutableRefObject<L.Map | null>) => {
   // Cache untuk data yang sudah di-fetch
   const pengepulsCacheRef = useRef<Pengepul[] | null>(null);
   const pengrajinsCacheRef = useRef<Pengrajin[] | null>(null);
+  const wasteOffersCacheRef = useRef<WasteOffer[] | null>(null);
 
+  // Layer refs - INI YANG DIPAKE, bukan di MapDisplay.tsx
   const pengepulLayerRef = useRef<L.LayerGroup | null>(null);
   const pengrajinLayerRef = useRef<L.LayerGroup | null>(null);
+  const wasteOfferLayerRef = useRef<L.LayerGroup | null>(null);
+
+  // Initialize layers (dipanggil dari MapDisplay setelah map ready)
+  const initializeLayers = useCallback(() => {
+    if (!mapRef.current) return;
+
+    if (!pengepulLayerRef.current) {
+      pengepulLayerRef.current = L.layerGroup().addTo(mapRef.current);
+    }
+    if (!pengrajinLayerRef.current) {
+      pengrajinLayerRef.current = L.layerGroup().addTo(mapRef.current);
+    }
+    if (!wasteOfferLayerRef.current) {
+      wasteOfferLayerRef.current = L.layerGroup().addTo(mapRef.current);
+    }
+  }, [mapRef]);
 
   const fetchWasteFacilities = async () => {
     if (wasteFacilities || loading.facilities) return;
@@ -54,10 +80,8 @@ export const useMapData = (mapRef: React.MutableRefObject<L.Map | null>) => {
       const response = await axios.get<WasteFacilitiesResponse>(
         "/api/waste-facilities"
       );
-      // Sesuaikan dengan struktur response API
       setWasteFacilities(response.data.facilities);
 
-      // Hitung total fasilitas
       const total =
         response.data.facilities.bankSampah.length +
         response.data.facilities.lembagaTpa.length +
@@ -75,6 +99,7 @@ export const useMapData = (mapRef: React.MutableRefObject<L.Map | null>) => {
 
   const loadPengepuls = useCallback(async () => {
     if (!mapRef.current || !pengepulLayerRef.current) {
+      console.log("Map or layer not ready");
       return;
     }
 
@@ -95,7 +120,6 @@ export const useMapData = (mapRef: React.MutableRefObject<L.Map | null>) => {
         return;
       }
 
-      // Simpan ke cache
       pengepulsCacheRef.current = pengepuls;
       renderPengepuls(pengepuls);
       toast.success(`Loaded ${pengepuls.length} pengepuls`);
@@ -124,13 +148,10 @@ export const useMapData = (mapRef: React.MutableRefObject<L.Map | null>) => {
 
         const marker = L.marker(
           [pengepul.user.latitude, pengepul.user.longitude],
-          {
-            icon: markerIcon,
-          }
+          { icon: markerIcon }
         );
 
         const popupContent = createPopupContent.pengepul(pengepul);
-
         marker.bindPopup(popupContent, {
           minWidth: 280,
           maxWidth: 320,
@@ -143,10 +164,10 @@ export const useMapData = (mapRef: React.MutableRefObject<L.Map | null>) => {
 
   const loadPengrajins = useCallback(async () => {
     if (!mapRef.current || !pengrajinLayerRef.current) {
+      console.log("Map or layer not ready");
       return;
     }
 
-    // Gunakan cache jika ada
     if (pengrajinsCacheRef.current) {
       renderPengrajins(pengrajinsCacheRef.current);
       return;
@@ -163,7 +184,6 @@ export const useMapData = (mapRef: React.MutableRefObject<L.Map | null>) => {
         return;
       }
 
-      // Simpan ke cache
       pengrajinsCacheRef.current = pengrajins;
       renderPengrajins(pengrajins);
       toast.success(`Loaded ${pengrajins.length} pengrajins`);
@@ -192,13 +212,10 @@ export const useMapData = (mapRef: React.MutableRefObject<L.Map | null>) => {
 
         const marker = L.marker(
           [pengrajin.workshopLatitude, pengrajin.workshopLongitude],
-          {
-            icon: markerIcon,
-          }
+          { icon: markerIcon }
         );
 
         const popupContent = createPopupContent.pengrajin(pengrajin);
-
         marker.bindPopup(popupContent, {
           minWidth: 288,
           maxWidth: 320,
@@ -209,12 +226,92 @@ export const useMapData = (mapRef: React.MutableRefObject<L.Map | null>) => {
     });
   };
 
+  // NEW: Load Waste Offers
+  const loadWasteOffers = useCallback(async () => {
+    if (!mapRef.current || !wasteOfferLayerRef.current) {
+      console.log("Map or layer not ready");
+      return;
+    }
+
+    if (wasteOffersCacheRef.current) {
+      renderWasteOffers(wasteOffersCacheRef.current);
+      return;
+    }
+
+    setLoading((prev) => ({ ...prev, wasteOffers: true }));
+
+    try {
+      const response = await axios.get<WasteOfferResponse | WasteOffer[]>(
+        "/api/waste-offers"
+      );
+
+      // Handle different response structures
+      let wasteOffers: WasteOffer[];
+
+      if (Array.isArray(response.data)) {
+        // Response is direct array: [...]
+        wasteOffers = response.data;
+      } else if ((response.data as WasteOfferResponse).wasteOffers) {
+        // Response has wasteOffers property: { wasteOffers: [...] }
+        wasteOffers = (response.data as WasteOfferResponse).wasteOffers;
+      } else {
+        console.error("Unexpected response structure:", response.data);
+        toast.error("Failed to parse waste offers data");
+        return;
+      }
+
+      if (!wasteOffers || wasteOffers.length === 0) {
+        toast.info("No waste offers found");
+        return;
+      }
+
+      wasteOffersCacheRef.current = wasteOffers;
+      renderWasteOffers(wasteOffers);
+      toast.success(`Loaded ${wasteOffers.length} waste offers`);
+    } catch (error) {
+      console.error("Error loading waste offers:", error);
+      toast.error("Failed to load waste offers");
+      setShowWasteOffers(false);
+    } finally {
+      setLoading((prev) => ({ ...prev, wasteOffers: false }));
+    }
+  }, [mapRef]);
+
+  const renderWasteOffers = (wasteOffers: WasteOffer[]) => {
+    if (!wasteOfferLayerRef.current) return;
+
+    wasteOfferLayerRef.current.clearLayers();
+
+    wasteOffers.forEach((offer: WasteOffer) => {
+      if (offer.latitude && offer.longitude) {
+        const markerIcon = L.icon({
+          iconUrl: "/marker/products.svg",
+          iconSize: [32, 32],
+          iconAnchor: [16, 32],
+          popupAnchor: [0, -32],
+        });
+
+        const marker = L.marker([offer.latitude, offer.longitude], {
+          icon: markerIcon,
+        });
+
+        const popupContent = createPopupContent.wasteOffer(offer);
+        marker.bindPopup(popupContent, {
+          minWidth: 288,
+          maxWidth: 320,
+          className: "custom-popup",
+        });
+        marker.addTo(wasteOfferLayerRef.current!);
+      }
+    });
+  };
+
   const cleanup = useCallback(() => {
     pengepulLayerRef.current?.clearLayers();
     pengrajinLayerRef.current?.clearLayers();
+    wasteOfferLayerRef.current?.clearLayers();
   }, []);
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       cleanup();
@@ -225,14 +322,19 @@ export const useMapData = (mapRef: React.MutableRefObject<L.Map | null>) => {
     loading,
     showPengepuls,
     showPengrajins,
+    showWasteOffers,
     wasteFacilities,
     pengepulLayerRef,
     pengrajinLayerRef,
+    wasteOfferLayerRef,
     setShowPengepuls,
     setShowPengrajins,
+    setShowWasteOffers,
     fetchWasteFacilities,
     loadPengepuls,
     loadPengrajins,
+    loadWasteOffers,
+    initializeLayers,
     cleanup,
   };
 };

@@ -94,7 +94,7 @@ const ChatFab: React.FC<ChatFabProps> = ({ onClick, isOpen }) => {
           style={{ bottom: window.innerWidth <= 768 ? "0px" : "-5px" }}
         >
           <Image
-            src="/images/contact.gif"
+            src="/images/contact.svg"
             alt="Asisten CHat"
             width={200}
             height={150}
