@@ -1,13 +1,12 @@
 // app/api/kecamatan-detail/[namaKecamatan]/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { KecamatanDetail } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { namaKecamatan: string } }
+  props: { params: Promise<{ namaKecamatan: string }> }
 ) {
+  const params = await props.params;
   const { namaKecamatan } = params;
 
   if (!namaKecamatan) {

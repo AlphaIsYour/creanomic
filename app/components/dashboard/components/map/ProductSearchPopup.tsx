@@ -1,6 +1,6 @@
 // components/map/ProductSearchPopup.ts
 
-import { Product, Store } from "@/app/maps/types/map.types";
+import { Product, Store } from "@/app/components/dashboard/types/map.types";
 
 export interface ProductSearchPopupProps {
   store: Store;
@@ -21,7 +21,13 @@ export class ProductSearchPopup {
 <div class="popup-container" style="width: 600px; height: 400px; max-width: 70vw;">
   <div class="overflow-hidden rounded-xl shadow-2xl bg-white font-sans antialiased">
 
-    ${this.generateMainContent(store, products, query, totalProductsFound, popupId)}
+    ${this.generateMainContent(
+      store,
+      products,
+      query,
+      totalProductsFound,
+      popupId
+    )}
   </div>
 </div>
 ${this.generateStyles()}
@@ -38,7 +44,12 @@ ${this.generateStyles()}
     return `
     <div class="p-6 flex gap-8 min-h-[280px]">
       ${this.generateStoreInfo(store)}
-      ${this.generateProductShowcase(products, query, totalProductsFound, popupId)}
+      ${this.generateProductShowcase(
+        products,
+        query,
+        totalProductsFound,
+        popupId
+      )}
     </div>
     `;
   }
@@ -81,7 +92,9 @@ ${this.generateStyles()}
    Kunjungi Toko
  </button>
  
- <button onclick="window.showRoute && window.showRoute(${store.latitude}, ${store.longitude}, '${store.storeName}')"
+ <button onclick="window.showRoute && window.showRoute(${store.latitude}, ${
+      store.longitude
+    }, '${store.storeName}')"
          class="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2.5 px-4 rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl transform flex items-center justify-center space-x-2"
          title="Tampilkan Rute ke ${store.storeName}">
    <span>Lihat Rute</span>
@@ -143,12 +156,25 @@ ${this.generateStyles()}
     return `
     <div class="relative bg-gray-50 rounded-xl p-4" style="overflow: hidden;">
       
-      ${displayProducts.map((_, index) => `<input type="radio" name="${carouselId}" id="${carouselId}-slide-${index + 1}" ${index === 0 ? "checked" : ""} style="display: none;">`).join("")}
+      ${displayProducts
+        .map(
+          (_, index) =>
+            `<input type="radio" name="${carouselId}" id="${carouselId}-slide-${
+              index + 1
+            }" ${index === 0 ? "checked" : ""} style="display: none;">`
+        )
+        .join("")}
       
       <!-- PERUBAHAN 2: Logika Carousel diubah total untuk single view -->
       <!-- Lebar container dikali jumlah produk, misal 4 produk jadi 400% -->
-      <div class="${carouselId}-slides" style="display: flex; width: ${displayProducts.length * 100}%; transition: transform 0.35s ease-in-out;">
-        ${displayProducts.map((product, index) => this.generateProductSlide(product, index, displayProducts)).join("")}
+      <div class="${carouselId}-slides" style="display: flex; width: ${
+      displayProducts.length * 100
+    }%; transition: transform 0.35s ease-in-out;">
+        ${displayProducts
+          .map((product, index) =>
+            this.generateProductSlide(product, index, displayProducts)
+          )
+          .join("")}
       </div>
       
       ${this.generateCSSNavigation(displayProducts.length, carouselId)}
@@ -166,12 +192,19 @@ ${this.generateStyles()}
     // PERUBAHAN 3: Lebar slide sekarang 100% dibagi jumlah total slide (misal 100/4 = 25%)
     // Ini memastikan setiap slide mengambil porsi yang sama dari container 400%
     return `
-    <div style="width: calc(100% / ${Math.max(1, displayProducts.length)}); flex-shrink: 0; padding: 8px; display: flex; justify-content: center;">
+    <div style="width: calc(100% / ${Math.max(
+      1,
+      displayProducts.length
+    )}); flex-shrink: 0; padding: 8px; display: flex; justify-content: center;">
       <div onclick="window.open('/products/${product.id}', '_blank')" 
            style="background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); cursor: pointer; transition: all 0.3s ease; width: 140px; height: 180px;">
         
         <div style="height: 120px; width: 100%; background: #f3f4f6; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center;">
-          <img src="${product.image || "/images/placeholder-product.svg"}" alt="${product.name || "Produk"}" style="width: 100%; height: 100%; object-cover; transition: transform 0.3s;" onerror="this.src='/images/placeholder-product.svg'" loading="lazy">
+          <img src="${
+            product.image || "/images/placeholder-product.svg"
+          }" alt="${
+      product.name || "Produk"
+    }" style="width: 100%; height: 100%; object-cover; transition: transform 0.3s;" onerror="this.src='/images/placeholder-product.svg'" loading="lazy">
           <div style="position: absolute; top: 8px; right: 8px; background: rgba(249, 115, 22, 0.9); color: white; font-size: 11px; padding: 4px 8px; border-radius: 12px; font-weight: 600;">
             ${index + 1}
           </div>
@@ -181,7 +214,11 @@ ${this.generateStyles()}
           <div style="font-weight: 600; font-size: 12px; color: #374151; text-align: center; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
             ${product.name || `Produk ${index + 1}`}
           </div>
-          ${product.price ? `<div style="text-align: center; margin-top: 4px; font-size: 11px; color: #f97316; font-weight: 700;">Rp ${product.price.toLocaleString()}</div>` : ""}
+          ${
+            product.price
+              ? `<div style="text-align: center; margin-top: 4px; font-size: 11px; color: #f97316; font-weight: 700;">Rp ${product.price.toLocaleString()}</div>`
+              : ""
+          }
         </div>
       </div>
     </div>
@@ -196,10 +233,18 @@ ${this.generateStyles()}
     let navigation = "";
     for (let i = 1; i <= productCount; i++) {
       if (i > 1) {
-        navigation += `<label for="${carouselId}-slide-${i - 1}" class="${carouselId}-nav-btn ${carouselId}-prev-${i}to${i - 1}" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); width: 40px; height: 40px; background: rgba(255,255,255,0.95); border: 1px solid #e5e7eb; border-radius: 50%; display: none; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: all 0.2s;"><svg style="width: 18px; height: 18px; color: #374151;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg></label>`;
+        navigation += `<label for="${carouselId}-slide-${
+          i - 1
+        }" class="${carouselId}-nav-btn ${carouselId}-prev-${i}to${
+          i - 1
+        }" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); width: 40px; height: 40px; background: rgba(255,255,255,0.95); border: 1px solid #e5e7eb; border-radius: 50%; display: none; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: all 0.2s;"><svg style="width: 18px; height: 18px; color: #374151;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg></label>`;
       }
       if (i < productCount) {
-        navigation += `<label for="${carouselId}-slide-${i + 1}" class="${carouselId}-nav-btn ${carouselId}-next-${i}to${i + 1}" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); width: 40px; height: 40px; background: rgba(255,255,255,0.95); border: 1px solid #e5e7eb; border-radius: 50%; display: none; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: all 0.2s;"><svg style="width: 18px; height: 18px; color: #374151;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></label>`;
+        navigation += `<label for="${carouselId}-slide-${
+          i + 1
+        }" class="${carouselId}-nav-btn ${carouselId}-next-${i}to${
+          i + 1
+        }" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); width: 40px; height: 40px; background: rgba(255,255,255,0.95); border: 1px solid #e5e7eb; border-radius: 50%; display: none; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: all 0.2s;"><svg style="width: 18px; height: 18px; color: #374151;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></label>`;
       }
     }
     return navigation;
@@ -210,7 +255,15 @@ ${this.generateStyles()}
     carouselId: string
   ): string {
     if (productCount <= 1) return "";
-    return `<div style="display: flex; justify-content: center; gap: 8px; margin-top: 16px;">${Array.from({ length: productCount }, (_, index) => `<label for="${carouselId}-slide-${index + 1}" class="${carouselId}-dot ${carouselId}-dot-${index + 1}" style="width: 12px; height: 12px; border-radius: 50%; cursor: pointer; transition: all 0.3s; background: #d1d5db; border: 2px solid #f3f4f6;"></label>`).join("")}</div>`;
+    return `<div style="display: flex; justify-content: center; gap: 8px; margin-top: 16px;">${Array.from(
+      { length: productCount },
+      (_, index) =>
+        `<label for="${carouselId}-slide-${
+          index + 1
+        }" class="${carouselId}-dot ${carouselId}-dot-${
+          index + 1
+        }" style="width: 12px; height: 12px; border-radius: 50%; cursor: pointer; transition: all 0.3s; background: #d1d5db; border: 2px solid #f3f4f6;"></label>`
+    ).join("")}</div>`;
   }
 
   private static generateEmptyState(): string {
@@ -238,7 +291,9 @@ ${this.generateStyles()}
         <svg class="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
           <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
         </svg>
-        <span><strong>${totalProducts - currentProducts}</strong> produk serupa lainnya tersedia di toko lain</span>
+        <span><strong>${
+          totalProducts - currentProducts
+        }</strong> produk serupa lainnya tersedia di toko lain</span>
       </div>
     </div>
     `;

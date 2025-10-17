@@ -6,8 +6,9 @@ import { authOptions } from "@/lib/auth";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { username: string } }
+  props: { params: Promise<{ username: string }> }
 ) {
+  const params = await props.params;
   try {
     const session = await getServerSession(authOptions);
     const { username } = params;
@@ -209,8 +210,9 @@ export async function GET(
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { username: string } }
+  props: { params: Promise<{ username: string }> }
 ) {
+  const params = await props.params;
   try {
     const session = await getServerSession(authOptions);
 

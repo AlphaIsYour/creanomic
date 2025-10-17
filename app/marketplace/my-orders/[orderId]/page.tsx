@@ -19,12 +19,13 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 
 interface OrderDetailPageProps {
-  params: { orderId: string };
+  params: Promise<{ orderId: string }>;
 }
 
 export default async function OrderDetailPage({
   params,
 }: OrderDetailPageProps) {
+  const { orderId } = await params;
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
     return (
@@ -39,7 +40,7 @@ export default async function OrderDetailPage({
     );
   }
 
-  const order = await fetchOrderById(params.orderId);
+  const order = await fetchOrderById(orderId);
 
   if (!order || order.userId !== session.user.id) {
     // Pastikan hanya pemilik order yang bisa melihat

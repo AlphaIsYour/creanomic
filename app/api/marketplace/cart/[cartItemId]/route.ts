@@ -8,8 +8,9 @@ import { authOptions } from "@/lib/auth";
 // PUT /api/marketplace/cart/:cartItemId - Update quantity
 export async function PUT(
   request: Request,
-  { params }: { params: { cartItemId: string } }
+  props: { params: Promise<{ cartItemId: string }> }
 ) {
+  const params = await props.params;
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
@@ -64,8 +65,9 @@ export async function PUT(
 // DELETE /api/marketplace/cart/:cartItemId - Remove item from cart
 export async function DELETE(
   request: Request,
-  { params }: { params: { cartItemId: string } }
+  props: { params: Promise<{ cartItemId: string }> }
 ) {
+  const params = await props.params;
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });

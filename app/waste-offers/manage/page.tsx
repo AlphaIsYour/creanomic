@@ -205,7 +205,7 @@ export default function ManageWasteOffersPage() {
           <div className="p-4 bg-gray-50">
             <div className="flex items-center justify-between">
               <p className="text-sm text-gray-600">
-                {loading ? "Memuat..." : `${offers.length} penawaran`}
+                {loading ? "Loading..." : `${offers.length} penawaran`}
               </p>
               <div className="flex gap-2">
                 <Link

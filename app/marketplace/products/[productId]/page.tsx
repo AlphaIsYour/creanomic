@@ -21,14 +21,15 @@ import AddToCartButton from "../../components/AddToCartButton"; // Client Compon
 import ReviewList from "@/app/marketplace/components/ReviewList"; // Client Component
 
 interface ProductDetailPageProps {
-  params: { productId: string };
+  params: Promise<{ productId: string }>;
 }
 
 export default async function ProductDetailPage({
   params,
 }: ProductDetailPageProps) {
-  const product = await fetchProductById(params.productId);
+  const { productId } = await params;
 
+  const product = await fetchProductById(productId);
   if (!product) {
     // Handle product not found
     return (

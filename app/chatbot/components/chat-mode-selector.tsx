@@ -42,11 +42,11 @@ const ChatModeSelector: React.FC<ChatModeSelectorProps> = ({
         <div className="flex items-center justify-between mb-8">
           <div className="mt-1">
             <Image
-              src="/images/bekasin.ai.png"
+              src="/images/daurin.ai.png"
               alt="Bekasin Logo"
-              width={152}
+              width={112}
               height={40}
-              className="w-34  h-8"
+              className="w-28  h-8"
             />
           </div>
           <button

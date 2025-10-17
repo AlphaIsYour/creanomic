@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import bankSampah from "@/app/maps/json/bank-sampah.json";
-import lembagaTpa from "@/app/maps/json/lembaga-tpa.json";
-import tpa from "@/app/maps/json/tpa.json";
-import tpst3r from "@/app/maps/json/tpst3r.json";
+import bankSampah from "@/app/components/dashboard/json/bank-sampah.json";
+import lembagaTpa from "@/app/components/dashboard/json/lembaga-tpa.json";
+import tpa from "@/app/components/dashboard/json/tpa.json";
+import tpst3r from "@/app/components/dashboard/json/tpst3r.json";
 
 interface GeoJSONFeature {
   type: string;

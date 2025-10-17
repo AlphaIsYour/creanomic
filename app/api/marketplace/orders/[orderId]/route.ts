@@ -9,8 +9,9 @@ import { UserRole, TransactionStatus } from "@prisma/client";
 // GET /api/marketplace/orders/:orderId - Get order details by ID
 export async function GET(
   request: Request,
-  { params }: { params: { orderId: string } }
+  props: { params: Promise<{ orderId: string }> }
 ) {
+  const params = await props.params;
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
@@ -72,8 +73,9 @@ export async function GET(
 // PUT /api/marketplace/orders/:orderId - Update order status (for admin/pengrajin)
 export async function PUT(
   request: Request,
-  { params }: { params: { orderId: string } }
+  props: { params: Promise<{ orderId: string }> }
 ) {
+  const params = await props.params;
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });

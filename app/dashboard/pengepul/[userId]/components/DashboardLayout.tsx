@@ -94,7 +94,7 @@ export default function DashboardLayout({
             <div className="w-8 h-8 bg-[#8C1007] rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-sm">C</span>
             </div>
-            <span className="font-bold text-lg">Creanomic</span>
+            <span className="font-bold text-lg">Daurin</span>
           </Link>
           <button
             onClick={() => setSidebarOpen(false)}

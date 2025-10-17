@@ -22,12 +22,14 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 
 interface BookingDetailPageProps {
-  params: { bookingId: string };
+  params: Promise<{ bookingId: string }>;
 }
 
 export default async function BookingDetailPage({
   params,
 }: BookingDetailPageProps) {
+  const { bookingId } = await params;
+
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
     return (
@@ -42,7 +44,7 @@ export default async function BookingDetailPage({
     );
   }
 
-  const booking = await fetchBookingById(params.bookingId);
+  const booking = await fetchBookingById(bookingId);
   // app/marketplace/booking/[bookingId]/page.tsx (Lanjutan)
 
   if (!booking || booking.userId !== session.user.id) {

@@ -135,11 +135,16 @@ export async function fetchProductById(
 // --- Fungsi untuk Cart ---
 
 export async function fetchCartItems(): Promise<CartItemWithProduct[]> {
-  const { data } = await apiFetch<CartItemWithProduct[]>(
-    `/api/marketplace/cart`,
-    { cache: "no-store" }
-  );
-  return data;
+  try {
+    const { data } = await apiFetch<CartItemWithProduct[]>(
+      `/api/marketplace/cart`,
+      { cache: "no-store" }
+    );
+    return data || []; // ← Tambahkan fallback empty array
+  } catch (error) {
+    console.error("Failed to fetch cart items:", error);
+    return []; // ← Return empty array instead of throwing
+  }
 }
 
 export async function addToCart(

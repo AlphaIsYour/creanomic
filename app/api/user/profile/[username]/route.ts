@@ -6,8 +6,9 @@ import { authOptions } from "@/lib/auth";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { username: string } }
+  props: { params: Promise<{ username: string }> }
 ) {
+  const params = await props.params;
   try {
     const { username } = params;
     const session = await getServerSession(authOptions);
@@ -85,13 +86,46 @@ export async function GET(
     const isOwnProfile = session?.user?.id === user.id;
 
     // Get additional stats
-    const [wasteOffers, products, reviews, completedTransactions] =
+    const [wasteOffersData, products, reviews, completedTransactions] =
       await Promise.all([
-        // Waste offers count
-        prisma.wasteOffer.count({
+        // Waste offers with full details
+        prisma.wasteOffer.findMany({
           where: {
             userId: user.id,
             status: { in: ["AVAILABLE", "RESERVED", "TAKEN", "COMPLETED"] },
+          },
+          orderBy: { createdAt: "desc" },
+          select: {
+            id: true,
+            title: true,
+            description: true,
+            materialType: true,
+            weight: true,
+            images: true,
+            condition: true,
+            address: true,
+            latitude: true,
+            longitude: true,
+            offerType: true,
+            suggestedPrice: true,
+            status: true,
+            createdAt: true,
+            updatedAt: true,
+            reservedAt: true,
+            takenAt: true,
+            pengepul: {
+              select: {
+                id: true,
+                companyName: true,
+                user: {
+                  select: {
+                    id: true,
+                    name: true,
+                    image: true,
+                  },
+                },
+              },
+            },
           },
         }),
 
@@ -168,11 +202,12 @@ export async function GET(
     return NextResponse.json({
       user,
       stats: {
-        wasteOffers,
+        wasteOffers: wasteOffersData.length,
         products: products.length,
         reviews: reviews.length,
         completedTransactions,
       },
+      wasteOffers: wasteOffersData,
       products,
       reviews,
       isOwnProfile,

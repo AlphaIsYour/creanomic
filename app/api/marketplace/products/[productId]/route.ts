@@ -10,8 +10,9 @@ import { UserRole } from "@prisma/client"; // Untuk role enum
 // GET /api/marketplace/products/:productId - Get product by ID
 export async function GET(
   request: Request,
-  { params }: { params: { productId: string } }
+  props: { params: Promise<{ productId: string }> }
 ) {
+  const params = await props.params;
   try {
     const product = await prisma.craftProduct.findUnique({
       where: { id: params.productId },
@@ -62,8 +63,9 @@ export async function GET(
 // PUT /api/marketplace/products/:productId - Update product (only for owner PENGRAJIN or ADMIN)
 export async function PUT(
   request: Request,
-  { params }: { params: { productId: string } }
+  props: { params: Promise<{ productId: string }> }
 ) {
+  const params = await props.params;
   // TODO: Implement authentication and authorization
   // const session = await getServerSession(authOptions);
   // if (!session) {
@@ -98,8 +100,9 @@ export async function PUT(
 // DELETE /api/marketplace/products/:productId - Delete product (only for owner PENGRAJIN or ADMIN)
 export async function DELETE(
   request: Request,
-  { params }: { params: { productId: string } }
+  props: { params: Promise<{ productId: string }> }
 ) {
+  const params = await props.params;
   // TODO: Implement authentication and authorization
   // const session = await getServerSession(authOptions);
   // if (!session) {

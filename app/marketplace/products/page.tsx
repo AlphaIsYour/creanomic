@@ -51,7 +51,7 @@ export default async function ProductsPage({
   } = await fetchProducts(queryParams);
 
   return (
-    <Container size="xl" py="lg">
+    <Container size="xl" py="lg" className="mb-20">
       <Title order={1} mb="xl">
         Semua Produk Kerajinan
       </Title>

@@ -121,11 +121,11 @@ export async function POST(req: Request) {
 
     if (isOnlyGreeting) {
       const greetings = [
-        "Hai juga! 👋 Aku Eco Assistant dari Creanomic, siap bantu kamu eksplor dunia daur ulang. Ada yang bisa aku bantuin hari ini?",
-        "Halo! 🌱 Senang kamu mampir! Aku Eco Assistant Creanomic. Kamu lagi nyari info apa nih seputar limbah atau kerajinan?",
+        "Hai juga! 👋 Aku Eco Assistant dari Daurin, siap bantu kamu eksplor dunia daur ulang. Ada yang bisa aku bantuin hari ini?",
+        "Halo! 🌱 Senang kamu mampir! Aku Eco Assistant Daurin. Kamu lagi nyari info apa nih seputar limbah atau kerajinan?",
         "Wih, halo! Aku Eco Assistant, nih. Ada kabar baik apa nih dari dunia daur ulang yang bisa aku bantu cariin infonya buat kamu?",
         "Eh, ada kamu! 👋 Aku Eco Assistant, nih. Yuk, ngobrolin daur ulang atau apa aja yang kamu mau tahu!",
-        "Selamat datang di Creanomic! Aku siap bantu kamu dengan info-info seru seputar limbah dan kerajinan. Mau mulai dari mana?",
+        "Selamat datang di Daurin! Aku siap bantu kamu dengan info-info seru seputar limbah dan kerajinan. Mau mulai dari mana?",
       ];
       directResponseContent =
         greetings[Math.floor(Math.random() * greetings.length)];
@@ -423,7 +423,7 @@ export async function POST(req: Request) {
           )
           .join("\n");
 
-        context = `STATISTIK PLATFORM CREANOMIC:
+        context = `STATISTIK PLATFORM Daurin:
 
 Limbah & Daur Ulang:
 - Penawaran Limbah Aktif: ${totalWasteOffers}
@@ -459,7 +459,7 @@ ${materialList}`;
         userQuery.includes("tutorial") ||
         userQuery.includes("info daur ulang")
       ) {
-        context = `TIPS DAUR ULANG & PENGELOLAAN LIMBAH DARI CREANOMIC:
+        context = `TIPS DAUR ULANG & PENGELOLAAN LIMBAH DARI Daurin:
 
 Memilah Limbah Itu Penting! 🗑️
 - Pisahkan berdasarkan jenis (plastik, kertas, logam, organik, dll.).
@@ -471,7 +471,7 @@ Jual atau Donasikan Limbahmu! 💰💖
 - Kumpulkan dalam jumlah yang cukup (biasanya minimal 5-10kg baru layak diangkut).
 - Ambil foto limbahmu dengan jelas untuk penawaran di platform.
 - Tentukan harga yang wajar atau pilih opsi donasi untuk kebaikan lingkungan.
-- Hubungi pengepul terverifikasi di Creanomic yang dekat dengan lokasimu.
+- Hubungi pengepul terverifikasi di Daurin yang dekat dengan lokasimu.
 
 Kreasikan Limbah Jadi Kerajinan! 🎨✨
 - Butuh inspirasi? Yuk, cek produk-produk pengrajin kami di platform!
@@ -499,7 +499,7 @@ Yuk, mulai aksi daur ulangmu sekarang! 😉`;
     // System message untuk AI
     const systemMessage: CoreMessage = {
       role: "system",
-      content: `Kamu adalah Eco Assistant dari Creanomic yang ramah, asik, dan suka membantu! 🌱
+      content: `Kamu adalah Eco Assistant dari Daurin yang ramah, asik, dan suka membantu! 🌱
 
 PERSONALITY:
 - Pakai "aku/kamu".
@@ -507,10 +507,10 @@ PERSONALITY:
 - Sering pakai emoji yang relevan (tapi jangan berlebihan).
 - Gunakan bahasa yang casual dan dekat dengan anak muda (misal: "yuk", "spill aja", "mantap").
 - Jika diberikan data, jelaskan dengan natural dan helpful.
-- Jika tidak ada data spesifik, jelaskan tentang Creanomic dan fitur-fiturnya dengan engaging.
+- Jika tidak ada data spesifik, jelaskan tentang Daurin dan fitur-fiturnya dengan engaging.
 
-TENTANG CREANOMIC:
-Creanomic adalah platform ekonomi sirkular untuk daur ulang limbah di Indonesia. Di sini pengguna bisa:
+TENTANG Daurin:
+Daurin adalah platform ekonomi sirkular untuk daur ulang limbah di Indonesia. Di sini pengguna bisa:
 - Jual atau donasikan limbah ke pengepul terverifikasi
 - Beli produk kerajinan unik dari bahan daur ulang
 - Pesan custom craft dari pengrajin berpengalaman
@@ -521,7 +521,7 @@ CAPABILITIES:
 - Produk kerajinan daur ulang
 - Custom craft booking
 - Tips daur ulang & pengelolaan limbah
-- Statistik platform Creanomic
+- Statistik platform Daurin
 
 RESPONSE STYLE:
 - Natural & conversational
@@ -532,7 +532,7 @@ RESPONSE STYLE:
 ${
   context
     ? `\nDATA TERSEDIA:\n${context}\n\nJelaskan data ini dengan cara yang menarik dan mudah dipahami!`
-    : "\nBelum ada data spesifik yang diminta. Jawab pertanyaan user dengan informasi umum tentang Creanomic atau bantu arahkan mereka untuk bertanya lebih spesifik."
+    : "\nBelum ada data spesifik yang diminta. Jawab pertanyaan user dengan informasi umum tentang Daurin atau bantu arahkan mereka untuk bertanya lebih spesifik."
 }`,
     };
 

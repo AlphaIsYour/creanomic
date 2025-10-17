@@ -51,7 +51,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
                 console.log("Switching to search mode:", mode.type);
                 setSearchMode(mode.type);
               }}
-              className={`px-3 py-[12px] text-xs font-medium transition-all duration-200 relative ${
+              className={`px-2 py-2 text-xs font-medium transition-all duration-200 relative ${
                 searchMode === mode.type
                   ? "bg-[#8C1007] text-white"
                   : "text-[#2C2C2C] hover:bg-[#F4E1D2]/50"

@@ -32,7 +32,7 @@ export default function UserMenu({ session }: UserMenuProps) {
     <Menu shadow="md" width={200}>
       <Menu.Target>
         <Avatar
-          src={session.user.image || null}
+          src={session.user.image || "/images/photo-placeholder.svg"}
           alt={session.user.name || "User"}
           radius="xl"
           style={{ cursor: "pointer" }}
@@ -72,7 +72,7 @@ export default function UserMenu({ session }: UserMenuProps) {
             <IconSettings style={{ width: rem(14), height: rem(14) }} />
           }
           component={Link}
-          href="/dashboard/profile" // Sesuaikan dengan path profil pengguna Anda
+          href="/profile/" // Sesuaikan dengan path profil pengguna Anda
         >
           Pengaturan Akun
         </Menu.Item>

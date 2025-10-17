@@ -6,11 +6,12 @@ import { prisma } from "@/lib/prisma";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { userId: string } }
+  props: { params: Promise<{ userId: string }> }
 ) {
+  const params = await props.params;
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session || session.user.id !== params.userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }

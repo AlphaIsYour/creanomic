@@ -1,4 +1,4 @@
-// Creanomic - Improved Schema
+// Daurin - Improved Schema
 generator client {
   provider = "prisma-client-js"
 }
@@ -26,6 +26,45 @@ model Account {
   @@unique([provider, providerAccountId])
   @@index([userId])
 }
+
+model KecamatanDetail {
+  id             String    @id @default(cuid())
+  nama           String    @unique
+  kabupatenKota  String?
+  deskripsi      String?   @db.Text
+  sejarahSingkat String?   @db.Text
+  
+  luasWilayah    Float?    
+  jumlahPenduduk Int?      
+  
+  jumlahKelurahan Int?
+  jumlahDesa      Int?
+  
+  potensiUtama   Json?     
+  kantorAlamat   String?
+  kantorTelepon  String?
+  kantorEmail    String?
+  websiteResmi   String?
+
+  logoKecamatanUrl String?
+  bannerKecamatanUrl String?
+  galeriFotoUrls Json?     
+
+  totalTokoDiArea      Int?      @default(0)
+  totalMitraDiArea     Int?      @default(0)
+  kategoriProdukPopuler Json?    
+  layananMitraPopuler  Json?    
+  ratingRataRataToko   Float?    
+  ratingRataRataMitra  Float?    
+
+  dataTambahan   Json?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([nama])
+  @@map("kecamatan_details")
+}
+
 
 model Session {
   id           String   @id @default(cuid())

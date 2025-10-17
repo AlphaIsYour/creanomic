@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // app/marketplace/cart/page.tsx
 "use client";
 
@@ -13,24 +14,36 @@ import {
   Group,
   Divider,
 } from "@mantine/core";
-import { useQuery } from "@tanstack/react-query"; // Contoh library untuk data fetching
+import { useQuery } from "@tanstack/react-query";
 import { fetchCartItems } from "@/lib/api/marketplace";
-import CartItemCard from "@/app/marketplace/components/CartItemCard"; // Client Component
-import OrderSummary from "@/app/marketplace/components/OrderSummary"; // Client Component
+import CartItemCard from "@/app/marketplace/components/CartItemCard";
+import OrderSummary from "@/app/marketplace/components/OrderSummary";
 import { useRouter } from "next/navigation";
 import { IconShoppingCartOff } from "@tabler/icons-react";
-import LoadingOverlay from "@/app/marketplace/components/LoadingOverlay"; // Komponen loading
+import LoadingOverlay from "@/app/marketplace/components/LoadingOverlay";
 
 export default function CartPage() {
   const router = useRouter();
   const {
-    data: cartItems,
+    data: cartItems = [], // ← Default empty array
     isLoading,
     isError,
     error,
   } = useQuery({
     queryKey: ["cartItems"],
-    queryFn: fetchCartItems,
+    queryFn: async () => {
+      try {
+        return await fetchCartItems();
+      } catch (err: any) {
+        // Jika unauthorized, redirect ke login
+        if (err.message === "Unauthorized") {
+          router.push("/auth/login");
+          return [];
+        }
+        throw err;
+      }
+    },
+    retry: false, // ← Jangan retry jika gagal
   });
 
   if (isLoading) {
@@ -54,6 +67,9 @@ export default function CartPage() {
         <Text ta="center" mt="md" c="red">
           {error?.message || "Gagal memuat keranjang belanja Anda."}
         </Text>
+        <Button mt="md" onClick={() => router.push("/auth/login")}>
+          Login
+        </Button>
       </Container>
     );
   }
@@ -82,8 +98,7 @@ export default function CartPage() {
             </Paper>
           </Box>
           <Box style={{ flex: 1 }}>
-            <OrderSummary subtotal={subtotal} shippingCost={0} />{" "}
-            {/* Shipping cost bisa dihitung nanti */}
+            <OrderSummary subtotal={subtotal} shippingCost={0} />
             <Button
               fullWidth
               mt="md"
@@ -95,7 +110,17 @@ export default function CartPage() {
           </Box>
         </Flex>
       ) : (
-        <Paper withBorder p="xl" radius="md" style={{ textAlign: "center" }}>
+        <Paper
+          withBorder
+          p="xl"
+          radius="md"
+          style={{
+            textAlign: "center",
+            alignItems: "center",
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
           <IconShoppingCartOff size={80} color="var(--mantine-color-gray-4)" />
           <Title order={3} mt="md">
             Keranjang Anda Kosong

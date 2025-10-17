@@ -13,16 +13,18 @@ import ProfileTabs from "./components/ProfileTabs";
 import AboutTab from "./components/tabs/AboutTab";
 import ProductsTab from "./components/tabs/ProductsTab";
 import ReviewsTab from "./components/tabs/ReviewsTab";
+import WasteOffersTab from "./components/tabs/WasteOffersTab";
 
 interface UserProfile {
   user: any;
   stats: any;
   products: any[];
+  wasteOffers: any[];
   reviews: any[];
   isOwnProfile: boolean;
 }
 
-type TabId = "about" | "products" | "reviews";
+type TabId = "about" | "waste-offers" | "products" | "reviews";
 
 export default function ProfilePage() {
   const params = useParams();
@@ -85,7 +87,7 @@ export default function ProfilePage() {
       try {
         await navigator.share({
           title: `Profil ${profile?.user.name}`,
-          text: `Lihat profil ${profile?.user.name} di Creanomic`,
+          text: `Lihat profil ${profile?.user.name} di Daurin`,
           url,
         });
       } catch (err) {
@@ -112,13 +114,22 @@ export default function ProfilePage() {
     return null;
   }
 
-  const { user, stats, products, reviews, isOwnProfile } = profile;
+  const { user, stats, products, wasteOffers, reviews, isOwnProfile } = profile;
   const roleBadge = getRoleBadge(user.role);
   const profileData = user.pengepulProfile || user.pengrajinProfile;
 
   // Build tabs dynamically
   const tabs = [
     { id: "about", label: "Tentang" },
+    ...(wasteOffers.length > 0
+      ? [
+          {
+            id: "waste-offers",
+            label: "Sampah Ditawarkan",
+            count: wasteOffers.length,
+          },
+        ]
+      : []),
     ...(user.role === "PENGRAJIN" && products.length > 0
       ? [{ id: "products", label: "Produk", count: products.length }]
       : []),
@@ -151,6 +162,9 @@ export default function ProfilePage() {
         <div className="min-h-[200px]">
           {activeTab === "about" && (
             <AboutTab user={user} profileData={profileData} />
+          )}
+          {activeTab === "waste-offers" && (
+            <WasteOffersTab wasteOffers={wasteOffers} />
           )}
           {activeTab === "products" && <ProductsTab products={products} />}
           {activeTab === "reviews" && <ReviewsTab reviews={reviews} />}

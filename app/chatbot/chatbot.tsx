@@ -11,7 +11,7 @@ const Chatbot: React.FC = () => {
   const [messages, setMessages] = useState<MessageData[]>([
     {
       id: "initial-1",
-      text: "Halo! Saya Eco Assistant dari Creanomic! 🌱 Ada yang bisa aku bantu terkait limbah, pengepul, kerajinan daur ulang, atau hal lainnya?",
+      text: "Halo! Saya Eco Assistant dari Daurin! Ada yang bisa aku bantu terkait limbah, pengepul, kerajinan daur ulang, atau hal lainnya?",
       sender: "bot",
     },
   ]);

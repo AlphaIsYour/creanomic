@@ -104,7 +104,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               <Shield className="w-6 h-6 text-[#8C1007]" />
               <div>
                 <h1 className="text-xl font-bold text-gray-900">Admin Panel</h1>
-                <p className="text-xs text-gray-500">Creanomic Dashboard</p>
+                <p className="text-xs text-gray-500">Daurin Dashboard</p>
               </div>
             </div>
             <div className="flex items-center space-x-4">

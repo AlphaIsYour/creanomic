@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-// app/maps/components/TourGuide.tsx
+// app/components/dashboard/components/TourGuide.tsx
 
 import React, { useEffect, useRef } from "react";
 import { driver, DriveStep, Config } from "driver.js";

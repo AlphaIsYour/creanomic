@@ -27,7 +27,11 @@ export async function getMalangGeoJSON(): Promise<KecamatanFeatureCollection> {
   }
 
   try {
-    const filePath = path.join(process.cwd(), "app/maps/json", "malang.json");
+    const filePath = path.join(
+      process.cwd(),
+      "app/components/dashboard/json",
+      "malang.json"
+    );
     const fileContents = await fs.readFile(filePath, "utf8");
     const geojsonData = JSON.parse(fileContents) as KecamatanFeatureCollection;
 

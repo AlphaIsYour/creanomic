@@ -151,3 +151,22 @@ export interface SearchMode {
   type: "pengepul" | "pengrajin" | "waste-offers";
   label: string;
 }
+
+export interface Store {
+  id: string;
+  userId: string;
+  storeName: string; // dari craftTypes atau workshop
+  location?: string; // workshopAddress
+  latitude: number; // workshopLatitude
+  longitude: number; // workshopLongitude
+  logoUrl?: string; // dari user.image
+}
+
+// Update Product = CraftProduct
+export interface Product {
+  id: string; // ← ada di schema
+  name: string; // title di schema
+  description?: string; // ✓ ada
+  image?: string; // images[0] di schema
+  price: number; // ✓ ada di schema
+}

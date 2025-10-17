@@ -10,9 +10,9 @@ import {
   Flex,
   Box,
 } from "@mantine/core";
-import { fetchUserBookings } from "@/lib/api/marketplace";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { IconTool } from "@tabler/icons-react";
 
@@ -36,7 +36,22 @@ export default async function MyBookingsPage() {
     );
   }
 
-  const bookings = await fetchUserBookings();
+  // Akses database langsung
+  const bookings = await prisma.serviceBooking.findMany({
+    where: { userId: session.user.id },
+    include: {
+      user: { select: { id: true, name: true, email: true } },
+      pengrajin: {
+        select: {
+          id: true,
+          craftTypes: true,
+          user: { select: { id: true, name: true, image: true, email: true } },
+        },
+      },
+      transactions: true,
+    },
+    orderBy: { createdAt: "desc" },
+  });
 
   return (
     <Container size="xl" py="lg">
@@ -91,7 +106,17 @@ export default async function MyBookingsPage() {
           ))}
         </Flex>
       ) : (
-        <Paper withBorder p="xl" radius="md" style={{ textAlign: "center" }}>
+        <Paper
+          withBorder
+          p="xl"
+          radius="md"
+          style={{
+            textAlign: "center",
+            alignItems: "center",
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
           <IconTool size={80} color="var(--mantine-color-gray-4)" />
           <Title order={3} mt="md">
             Anda belum membuat permintaan booking layanan.
@@ -100,8 +125,6 @@ export default async function MyBookingsPage() {
             Butuh kerajinan khusus? Ajukan permintaan sekarang!
           </Text>
           <Button mt="lg" component={Link} href="/marketplace/booking/new">
-            {" "}
-            {/* Contoh link untuk membuat booking baru */}
             Buat Booking Baru
           </Button>
         </Paper>

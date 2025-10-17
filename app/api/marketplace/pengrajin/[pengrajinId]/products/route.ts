@@ -6,8 +6,9 @@ import { prisma } from "@/lib/prisma";
 // GET /api/marketplace/pengrajin/:pengrajinId/products - Get products by a specific pengrajin
 export async function GET(
   request: Request,
-  { params }: { params: { pengrajinId: string } }
+  props: { params: Promise<{ pengrajinId: string }> }
 ) {
+  const params = await props.params;
   try {
     const pengrajinProducts = await prisma.craftProduct.findMany({
       where: {

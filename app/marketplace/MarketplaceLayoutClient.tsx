@@ -25,7 +25,7 @@ export default function MarketplaceLayoutClient({
           <Group h="100%" px="md" justify="space-between">
             <Group>
               <Link
-                href="/marketplace"
+                href="/"
                 style={{
                   textDecoration: "none",
                   display: "flex",
@@ -33,15 +33,12 @@ export default function MarketplaceLayoutClient({
                 }}
               >
                 <Image
-                  src="/logo.svg"
-                  alt="Creanomic Logo"
-                  width={30}
-                  height={30}
+                  src="/images/daurin-logo1.svg"
+                  alt="Daurin Logo"
+                  width={105}
+                  height={40}
                   priority
                 />
-                <Text fw={700} size="xl" ml="xs">
-                  Creanomic
-                </Text>
               </Link>
               <Group ml="xl" gap="md" visibleFrom="sm">
                 <Link
@@ -79,7 +76,7 @@ export default function MarketplaceLayoutClient({
       <AppShell.Footer p="md" style={{ textAlign: "center" }}>
         <Container size="xl">
           <Text size="sm" c="dimmed">
-            &copy; {new Date().getFullYear()} Creanomic. All rights reserved.
+            &copy; {new Date().getFullYear()} Daurin. All rights reserved.
           </Text>
           <Group justify="center" gap="md" mt="xs">
             <Link

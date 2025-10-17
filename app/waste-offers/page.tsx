@@ -131,7 +131,7 @@ export default function WasteOffersPage() {
         {/* View Toggle */}
         <div className="flex items-center justify-between mb-6">
           <p className="text-sm text-gray-600">
-            {loading ? "Memuat..." : `${offers.length} penawaran ditemukan`}
+            {loading ? "Loading..." : `${offers.length} penawaran ditemukan`}
           </p>
 
           <div className="flex bg-white border border-gray-200 rounded-lg p-1">

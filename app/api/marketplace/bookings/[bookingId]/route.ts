@@ -9,8 +9,9 @@ import { BookingStatus, UserRole, TransactionStatus } from "@prisma/client";
 // GET /api/marketplace/bookings/:bookingId - Get booking details by ID
 export async function GET(
   request: Request,
-  { params }: { params: { bookingId: string } }
+  props: { params: Promise<{ bookingId: string }> }
 ) {
+  const params = await props.params;
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
@@ -77,8 +78,9 @@ export async function GET(
 // PUT /api/marketplace/bookings/:bookingId - Update booking status/details
 export async function PUT(
   request: Request,
-  { params }: { params: { bookingId: string } }
+  props: { params: Promise<{ bookingId: string }> }
 ) {
+  const params = await props.params;
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });

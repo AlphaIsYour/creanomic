@@ -146,7 +146,7 @@ export default function AdminDashboard() {
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Dashboard Overview</h1>
         <p className="text-gray-600 mt-1">
-          Ringkasan aktivitas platform Creanomic
+          Ringkasan aktivitas platform Daurin
         </p>
       </div>
 

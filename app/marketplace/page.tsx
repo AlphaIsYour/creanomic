@@ -19,7 +19,7 @@ export default async function MarketplaceHomePage() {
         style={{ borderRadius: "8px" }}
       >
         <Title order={1} c="blue.8">
-          Selamat Datang di Creanomic Marketplace!
+          Selamat Datang di Daurin Marketplace!
         </Title>
         <Text size="lg" mt="sm">
           Temukan produk kerajinan unik dan ramah lingkungan.

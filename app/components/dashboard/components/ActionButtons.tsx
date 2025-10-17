@@ -36,7 +36,7 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
       >
         <span className="font-medium hidden sm:inline">
           {loadingWasteOffers
-            ? "Memuat..."
+            ? "Loading..."
             : showWasteOffers
             ? "SEMBUNYIKAN"
             : "TAMPILKAN"}
@@ -52,7 +52,7 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
       >
         <span className="font-medium hidden sm:inline">
           {loadingPengepuls
-            ? "Memuat..."
+            ? "Loading..."
             : showPengepuls
             ? "SEMBUNYIKAN"
             : "TAMPILKAN"}
@@ -68,7 +68,7 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
       >
         <span className="font-medium hidden sm:inline">
           {loadingPengrajins
-            ? "Memuat..."
+            ? "Loading..."
             : showPengrajins
             ? "SEMBUNYIKAN"
             : "TAMPILKAN"}
