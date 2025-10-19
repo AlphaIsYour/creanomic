@@ -74,7 +74,7 @@ export async function generateMetadata({
   }
 
   return {
-    title: `${pengrajin.user.name} - Pengrajin Bekasin`,
+    title: `${pengrajin.user.name} - Pengrajin Daurin`,
     description:
       pengrajin.description || `Profil pengrajin ${pengrajin.user.name}`,
     openGraph: {

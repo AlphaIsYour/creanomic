@@ -9,9 +9,11 @@ export default async function MarketplaceHomePage() {
     const result = await fetchProducts({ limit: 8, sort: "newest" });
 
     console.log("RESULT:", result);
-    console.log("PRODUCTS:", result.data);
 
-    const products = result.data;
+    // Fix: Cek apakah result memiliki property data atau result itu sendiri adalah array
+    const products = Array.isArray(result) ? result : result.data || [];
+
+    console.log("PRODUCTS:", products);
 
     return (
       <div className="max-w-7xl mx-auto px-4 py-8">
@@ -45,6 +47,13 @@ export default async function MarketplaceHomePage() {
     );
   } catch (error) {
     console.error("ERROR FETCHING:", error);
-    return <div>Error loading products</div>;
+    return (
+      <div className="text-center py-12">
+        <p className="text-red-500">Error loading products</p>
+        <p className="text-sm text-gray-500 mt-2">
+          {error instanceof Error ? error.message : "Unknown error"}
+        </p>
+      </div>
+    );
   }
 }

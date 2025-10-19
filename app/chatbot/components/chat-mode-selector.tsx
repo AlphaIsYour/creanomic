@@ -43,7 +43,7 @@ const ChatModeSelector: React.FC<ChatModeSelectorProps> = ({
           <div className="mt-1">
             <Image
               src="/images/daurin.ai.png"
-              alt="Bekasin Logo"
+              alt="Daurin Logo"
               width={112}
               height={40}
               className="w-28  h-8"

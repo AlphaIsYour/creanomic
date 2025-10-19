@@ -14,7 +14,7 @@ const groq = createGroq({
   apiKey: process.env.GROQ_API_KEY,
 });
 
-// Helper functions (tetap sama)
+// Helper functions
 function formatPrice(price: number): string {
   return `Rp ${price.toLocaleString("id-ID")}`;
 }
@@ -40,36 +40,6 @@ function getMaterialTypeText(type: string): string {
   return materialMap[type] || type;
 }
 
-function getOfferStatusText(status: string): string {
-  const statusMap: { [key: string]: string } = {
-    AVAILABLE: "Tersedia",
-    RESERVED: "Direservasi",
-    TAKEN: "Diambil",
-    COMPLETED: "Selesai",
-    CANCELLED: "Dibatalkan",
-  };
-  return statusMap[status] || status;
-}
-
-function calculateDistance(
-  lat1: number,
-  lon1: number,
-  lat2: number,
-  lon2: number
-): number {
-  const R = 6371; // Radius bumi dalam km
-  const dLat = ((lat2 - lat1) * Math.PI) / 180;
-  const dLon = ((lon2 - lon1) * Math.PI) / 180;
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos((lat1 * Math.PI) / 180) *
-      Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
-}
-
 export async function POST(req: Request) {
   try {
     const { messages }: { messages: CoreMessage[] } = await req.json();
@@ -79,11 +49,9 @@ export async function POST(req: Request) {
     const lastUserMessage = messages[messages.length - 1];
     let userQueryContent = lastUserMessage.content;
 
-    // Simpan query original untuk AI
     const originalQuery =
       typeof userQueryContent === "string" ? userQueryContent.trim() : "";
 
-    // Query untuk keyword matching (lowercase, no special chars)
     let userQuery =
       typeof userQueryContent === "string"
         ? userQueryContent
@@ -94,7 +62,7 @@ export async function POST(req: Request) {
 
     console.log("🔍 Cleaned user query:", userQuery);
 
-    // --- Handle greetings ---
+    // Handle greetings
     const greetingKeywords = [
       "halo",
       "hai",
@@ -113,7 +81,6 @@ export async function POST(req: Request) {
 
     let directResponseContent: string | null = null;
 
-    // Cek apakah HANYA sapaan (tidak ada kata lain yang signifikan)
     const isOnlyGreeting =
       greetingKeywords.includes(userQuery) ||
       (userQuery.split(" ").length <= 2 &&
@@ -131,7 +98,6 @@ export async function POST(req: Request) {
         greetings[Math.floor(Math.random() * greetings.length)];
     }
 
-    // Jika ada directResponseContent, kirimkan
     if (directResponseContent) {
       console.log("↩️ Sending direct response:", directResponseContent);
       const encoder = new TextEncoder();
@@ -152,8 +118,9 @@ export async function POST(req: Request) {
       });
     }
 
-    // --- Fetch context dari database ---
     let context = "";
+    let structuredData: any = null;
+    let dataType: string | null = null;
 
     try {
       // 1. Limbah/Waste Offers
@@ -189,6 +156,22 @@ export async function POST(req: Request) {
         });
 
         if (wasteOffers.length > 0) {
+          // Structured data untuk cards
+          structuredData = wasteOffers.map((w) => ({
+            id: w.id,
+            title: w.title,
+            materialType: getMaterialTypeText(w.materialType),
+            weight: w.weight || 0,
+            offerType: w.offerType,
+            price: w.suggestedPrice,
+            address: w.address,
+            userName: w.user.name || "Pengguna",
+            userPhone: w.user.phone || "",
+            description: w.description,
+          }));
+          dataType = "WASTE_OFFERS";
+
+          // Context untuk AI
           context = `DATA PENAWARAN LIMBAH TERBARU:\n\n${wasteOffers
             .map((w, i) => {
               const offerType = w.offerType === "SELL" ? "Dijual" : "Donasi";
@@ -200,9 +183,7 @@ export async function POST(req: Request) {
    - Berat: ${w.weight ? `${w.weight} kg` : "Belum ditentukan"}
    - ${offerType}: ${price}
    - Lokasi: ${w.address}
-   - Penawar: ${w.user.name || "Pengguna"}
-   - Kontak: ${w.user.phone || "Hubungi via platform"}
-   - Deskripsi: ${truncateText(w.description)}`;
+   - Penawar: ${w.user.name || "Pengguna"}`;
             })
             .join("\n\n")}`;
         }
@@ -242,6 +223,23 @@ export async function POST(req: Request) {
         });
 
         if (pengepuls.length > 0) {
+          // Structured data untuk cards
+          structuredData = pengepuls.map((p) => ({
+            id: p.id,
+            name: p.companyName || p.user.name,
+            rating: p.averageRating,
+            materials: p.specializedMaterials.map((m) =>
+              getMaterialTypeText(m)
+            ),
+            areas: p.operatingArea,
+            phone: p.whatsappNumber || p.user.phone || "",
+            collections: p.totalCollections,
+            totalWeight: p.totalWeight,
+            workingHours: p.workingHours,
+          }));
+          dataType = "PENGEPUL";
+
+          // Context untuk AI
           context = `DATA PENGEPUL TERVERIFIKASI:\n\n${pengepuls
             .map((p, i) => {
               const materials = p.specializedMaterials
@@ -252,17 +250,13 @@ export async function POST(req: Request) {
    - Rating: ${p.averageRating.toFixed(1)}/5.0 (${p.totalCollections} koleksi)
    - Spesialisasi: ${materials}
    - Area Operasi: ${areas}
-   - Radius: ${p.operatingRadius ? `${p.operatingRadius} km` : "Fleksibel"}
-   - Total Terkumpul: ${p.totalWeight} kg
-   - WhatsApp: ${p.whatsappNumber || p.user.phone || "-"}
-   - Jam Kerja: ${p.workingHours || "Hubungi untuk info"}
-   - Deskripsi: ${truncateText(p.description || "Pengepul terpercaya")}`;
+   - Total Terkumpul: ${p.totalWeight} kg`;
             })
             .join("\n\n")}`;
         }
       }
 
-      // 3. Kerajinan
+      // 3. Pengrajin dan Produk Kerajinan
       else if (
         userQuery.includes("pengrajin") ||
         userQuery.includes("kerajinan") ||
@@ -301,6 +295,23 @@ export async function POST(req: Request) {
         });
 
         if (products.length > 0) {
+          // Structured data untuk cards
+          structuredData = products.map((p) => ({
+            id: p.id,
+            title: p.title,
+            price: p.price,
+            materials: p.materials.map((m) => getMaterialTypeText(m)),
+            category: p.category,
+            stock: p.stock,
+            customizable: p.customizable,
+            pengrajinName: p.pengrajin.user.name,
+            pengrajinRating: p.pengrajin.averageRating,
+            pengrajinPhone: p.pengrajin.whatsappNumber || "",
+            description: p.description,
+          }));
+          dataType = "PRODUCTS";
+
+          // Context untuk AI
           context = `DATA PRODUK KERAJINAN DAUR ULANG:\n\n${products
             .map((p, i) => {
               const materials = p.materials
@@ -309,20 +320,15 @@ export async function POST(req: Request) {
               return `${i + 1}. ${p.title}
    - Harga: ${formatPrice(p.price)}
    - Bahan: ${materials}
-   - Ukuran: ${p.dimensions || "Lihat deskripsi"}
    - Stok: ${p.stock} pcs
-   - Kategori: ${p.category}
-   - Custom: ${p.customizable ? "Bisa custom" : "Standar"}
    - Pengrajin: ${p.pengrajin.user.name}
-   - Rating: ${p.pengrajin.averageRating.toFixed(1)}/5.0
-   - Kontak: ${p.pengrajin.whatsappNumber || "-"}
-   - Deskripsi: ${truncateText(p.description)}`;
+   - Rating: ${p.pengrajin.averageRating.toFixed(1)}/5.0`;
             })
             .join("\n\n")}`;
         }
       }
 
-      // 4. Custom/Booking
+      // 4. Custom/Booking - Pengrajin Profiles
       else if (
         userQuery.includes("custom") ||
         userQuery.includes("booking") ||
@@ -354,6 +360,24 @@ export async function POST(req: Request) {
         });
 
         if (pengrajins.length > 0) {
+          // Structured data untuk cards
+          structuredData = pengrajins.map((p) => ({
+            id: p.id,
+            name: p.user.name,
+            rating: p.averageRating,
+            craftTypes: p.craftTypes,
+            materials: p.specializedMaterials.map((m) =>
+              getMaterialTypeText(m)
+            ),
+            experience: p.yearsOfExperience || 0,
+            bookings: p.totalBookings,
+            phone: p.whatsappNumber || "",
+            instagram: p.instagramHandle,
+            workshopAddress: p.workshopAddress,
+          }));
+          dataType = "PENGRAJIN";
+
+          // Context untuk AI
           context = `DATA PENGRAJIN UNTUK LAYANAN CUSTOM:\n\n${pengrajins
             .map((p, i) => {
               const craftTypes = p.craftTypes.join(", ");
@@ -366,17 +390,13 @@ export async function POST(req: Request) {
    - Spesialisasi Bahan: ${materials}
    - Pengalaman: ${
      p.yearsOfExperience ? `${p.yearsOfExperience} tahun` : "Berpengalaman"
-   }
-   - Workshop: ${p.workshopAddress || "Hubungi untuk info"}
-   - WhatsApp: ${p.whatsappNumber || "-"}
-   - Instagram: ${p.instagramHandle ? `@${p.instagramHandle}` : "-"}
-   - Deskripsi: ${truncateText(p.description || "Pengrajin profesional")}`;
+   }`;
             })
             .join("\n\n")}`;
         }
       }
 
-      // 5. Statistik
+      // 5. Statistik Platform
       else if (
         userQuery.includes("statistik") ||
         userQuery.includes("berapa") ||
@@ -495,6 +515,7 @@ Yuk, mulai aksi daur ulangmu sekarang! 😉`;
 
     console.log("📊 Context fetched:", context ? "Yes" : "No");
     console.log("📏 Context length:", context.length);
+    console.log("🎴 Structured data:", structuredData ? dataType : "None");
 
     // System message untuk AI
     const systemMessage: CoreMessage = {
@@ -528,10 +549,15 @@ RESPONSE STYLE:
 - Variasi jawaban, jangan monoton
 - Gunakan markdown untuk struktur rapi
 - Selalu helpful dan encouraging
+- Jika ada card data yang ditampilkan, sebutkan bahwa user bisa langsung klik untuk info lebih lanjut
 
 ${
   context
-    ? `\nDATA TERSEDIA:\n${context}\n\nJelaskan data ini dengan cara yang menarik dan mudah dipahami!`
+    ? `\nDATA TERSEDIA:\n${context}\n\nJelaskan data ini dengan cara yang menarik dan mudah dipahami! ${
+        structuredData
+          ? "Card visual sudah ditampilkan untuk user, jadi fokus jelaskan informasi penting dan ajak mereka untuk mengeksplorasi card tersebut."
+          : ""
+      }`
     : "\nBelum ada data spesifik yang diminta. Jawab pertanyaan user dengan informasi umum tentang Daurin atau bantu arahkan mereka untuk bertanya lebih spesifik."
 }`,
     };
@@ -553,10 +579,22 @@ ${
       fullText += chunk;
     }
 
-    // Kirim sebagai SSE
+    // Kirim sebagai SSE dengan structured data
     const encoder = new TextEncoder();
     const stream = new ReadableStream({
       start(controller) {
+        // Kirim structured data dulu jika ada
+        if (structuredData && dataType) {
+          controller.enqueue(
+            encoder.encode(
+              `data: __CARD_DATA__${dataType}__${JSON.stringify(
+                structuredData
+              )}\n\n`
+            )
+          );
+        }
+
+        // Kirim text response
         controller.enqueue(encoder.encode(`data: ${fullText}\n\n`));
         controller.close();
       },

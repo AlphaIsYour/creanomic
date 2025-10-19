@@ -18,6 +18,7 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchCartItems } from "@/lib/api/marketplace";
 import CartItemCard from "@/app/marketplace/components/CartItemCard";
 import OrderSummary from "@/app/marketplace/components/OrderSummary";
+import WhatsAppCheckoutButton from "@/app/marketplace/components/WhatsAppCheckoutButton";
 import { useRouter } from "next/navigation";
 import { IconShoppingCartOff } from "@tabler/icons-react";
 import LoadingOverlay from "@/app/marketplace/components/LoadingOverlay";
@@ -25,7 +26,7 @@ import LoadingOverlay from "@/app/marketplace/components/LoadingOverlay";
 export default function CartPage() {
   const router = useRouter();
   const {
-    data: cartItems = [], // ← Default empty array
+    data: cartItems = [],
     isLoading,
     isError,
     error,
@@ -35,7 +36,6 @@ export default function CartPage() {
       try {
         return await fetchCartItems();
       } catch (err: any) {
-        // Jika unauthorized, redirect ke login
         if (err.message === "Unauthorized") {
           router.push("/auth/login");
           return [];
@@ -43,7 +43,7 @@ export default function CartPage() {
         throw err;
       }
     },
-    retry: false, // ← Jangan retry jika gagal
+    retry: false,
   });
 
   if (isLoading) {
@@ -99,14 +99,14 @@ export default function CartPage() {
           </Box>
           <Box style={{ flex: 1 }}>
             <OrderSummary subtotal={subtotal} shippingCost={0} />
-            <Button
-              fullWidth
-              mt="md"
-              size="lg"
-              onClick={() => router.push("/marketplace/checkout")}
-            >
-              Lanjutkan ke Checkout
-            </Button>
+
+            {/* WhatsApp Checkout Button */}
+            <WhatsAppCheckoutButton cartItems={cartItems} subtotal={subtotal} />
+
+            <Text size="xs" c="dimmed" ta="center" mt="sm">
+              Anda akan diarahkan ke WhatsApp pengrajin untuk menyelesaikan
+              pesanan
+            </Text>
           </Box>
         </Flex>
       ) : (

@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 interface ProfileHeaderProps {
   user: any;
@@ -35,10 +36,17 @@ export default function ProfileHeader({
   isAuthenticated,
   onShare,
 }: ProfileHeaderProps) {
+  const router = useRouter();
   return (
     <>
       {/* Cover Section - Professional Gradient */}
       <div className="relative h-64 border-b-1 border-[#2c2c2c] bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 overflow-hidden">
+        <button
+          onClick={() => router.back()}
+          className="absolute top-6 left-6 flex items-center gap-2 text-gray-700 hover:text-[#8C1007] bg-white/90 backdrop-blur-sm px-4 py-2 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 z-10"
+        >
+          ← Kembali
+        </button>
         {/* Subtle Pattern */}
         <div className="absolute inset-0 opacity-[0.03]">
           <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">

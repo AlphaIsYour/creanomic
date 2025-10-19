@@ -1,3 +1,5 @@
+// app/pengrajin/products/[productId]/ProductDetailClient.tsx
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 

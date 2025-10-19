@@ -82,7 +82,7 @@ export async function generateMetadata({
   }
 
   return {
-    title: `${pengepul.companyName || pengepul.user.name} - Pengepul Bekasin`,
+    title: `${pengepul.companyName || pengepul.user.name} - Pengepul Daurin`,
     description:
       pengepul.description ||
       `Profil pengepul ${pengepul.companyName || pengepul.user.name}`,

@@ -58,7 +58,7 @@ export async function generateMetadata({
   }
 
   return {
-    title: `${offer.title} - Bekasin`,
+    title: `${offer.title} - Daurin`,
     description: offer.description,
     openGraph: {
       title: offer.title,

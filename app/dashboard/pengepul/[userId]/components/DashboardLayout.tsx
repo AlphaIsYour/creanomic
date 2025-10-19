@@ -16,6 +16,7 @@ import {
   ArrowRightStartOnRectangleIcon,
 } from "@heroicons/react/24/outline";
 import { signOut } from "next-auth/react";
+import Image from "next/image";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -91,10 +92,15 @@ export default function DashboardLayout({
         {/* Logo */}
         <div className="h-16 flex items-center justify-between px-6 border-b border-gray-700">
           <Link href="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-[#8C1007] rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">C</span>
+            <div className="w-[140px] h-[50px] flex items-center justify-center">
+              <Image
+                src="/images/daurin-logo1.svg"
+                alt="Daurin"
+                width={140}
+                height={50}
+                className="w-full h-full object-contain"
+              />
             </div>
-            <span className="font-bold text-lg">Daurin</span>
           </Link>
           <button
             onClick={() => setSidebarOpen(false)}

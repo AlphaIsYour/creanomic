@@ -118,9 +118,12 @@ export default function ProfilePage() {
   const roleBadge = getRoleBadge(user.role);
   const profileData = user.pengepulProfile || user.pengrajinProfile;
 
-  // Build tabs dynamically
+  // Build tabs dynamically based on role and content
   const tabs = [
     { id: "about", label: "Tentang" },
+    ...(user.role === "PENGRAJIN" && products.length > 0
+      ? [{ id: "products", label: "Produk", count: products.length }]
+      : []),
     ...(wasteOffers.length > 0
       ? [
           {
@@ -129,9 +132,6 @@ export default function ProfilePage() {
             count: wasteOffers.length,
           },
         ]
-      : []),
-    ...(user.role === "PENGRAJIN" && products.length > 0
-      ? [{ id: "products", label: "Produk", count: products.length }]
       : []),
     ...(reviews.length > 0
       ? [{ id: "reviews", label: "Ulasan", count: reviews.length }]
@@ -155,21 +155,17 @@ export default function ProfilePage() {
         tabs={tabs}
         activeTab={activeTab}
         onTabChange={(tabId) => setActiveTab(tabId as TabId)}
-      />
-
-      {/* Tab Content */}
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 -mt-[calc(100%-80px)]">
-        <div className="min-h-[200px]">
-          {activeTab === "about" && (
-            <AboutTab user={user} profileData={profileData} />
-          )}
-          {activeTab === "waste-offers" && (
-            <WasteOffersTab wasteOffers={wasteOffers} />
-          )}
-          {activeTab === "products" && <ProductsTab products={products} />}
-          {activeTab === "reviews" && <ReviewsTab reviews={reviews} />}
-        </div>
-      </div>
+      >
+        {/* Tab Content - Now INSIDE ProfileTabs */}
+        {activeTab === "about" && (
+          <AboutTab user={user} profileData={profileData} />
+        )}
+        {activeTab === "products" && <ProductsTab products={products} />}
+        {activeTab === "waste-offers" && (
+          <WasteOffersTab wasteOffers={wasteOffers} />
+        )}
+        {activeTab === "reviews" && <ReviewsTab reviews={reviews} />}
+      </ProfileTabs>
     </div>
   );
 }

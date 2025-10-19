@@ -24,7 +24,12 @@ export async function GET(request: Request) {
             price: true,
             images: true,
             stock: true,
-            // Only necessary product info for cart view
+            pengrajin: {
+              select: {
+                whatsappNumber: true,
+                user: { select: { name: true } },
+              },
+            },
           },
         },
       },

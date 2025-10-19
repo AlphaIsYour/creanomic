@@ -24,7 +24,7 @@ interface CartItem {
     id: string;
     title: string;
     price: number;
-    imageUrl?: string;
+    images: string[]; // ✅ Ganti dari imageUrl jadi images (array)
     stock: number;
   };
 }
@@ -107,20 +107,24 @@ export default function CartItemCard({ item }: CartItemCardProps) {
     }).format(price);
   };
 
+  // ✅ Ambil gambar pertama dari array, atau pakai placeholder
+  const productImage = item.product.images?.[0] || "/placeholder-product.png";
+
   return (
     <Group align="flex-start" wrap="nowrap" p="md">
       <Image
-        src={item.product.imageUrl || "/placeholder-product.png"}
+        src={productImage}
         alt={item.product.title}
         w={100}
         h={100}
         fit="cover"
         radius="md"
+        fallbackSrc="/placeholder-product.png"
       />
 
       <Box style={{ flex: 1 }}>
         <Stack gap="xs">
-          <Text fw={600} size="lg">
+          <Text fw={600} size="lg" lineClamp={2}>
             {item.product.title}
           </Text>
           <Text size="xl" fw={700} c="blue">

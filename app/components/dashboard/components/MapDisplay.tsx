@@ -159,7 +159,7 @@ export default function MapComponent({
 
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         attribution:
-          ' <a href="https://www.openstreetmap.org/copyright">Bekasin</a> contributors',
+          ' <a href="https://www.openstreetmap.org/copyright">Daurin</a> contributors',
       }).addTo(map);
 
       const geoJSONLayer = L.geoJSON(typedMalangBoundaries, {

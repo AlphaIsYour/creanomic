@@ -44,7 +44,7 @@ export async function generateMetadata({
   }
 
   return {
-    title: `${product.title} - Bekasin`,
+    title: `${product.title} - Daurin`,
     description: product.description,
     openGraph: {
       title: product.title,

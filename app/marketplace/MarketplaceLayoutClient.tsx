@@ -71,7 +71,9 @@ export default function MarketplaceLayoutClient({
         </Container>
       </AppShell.Header>
 
-      <AppShell.Main>{children}</AppShell.Main>
+      <AppShell.Main style={{ marginBottom: "100px" }}>
+        {children}
+      </AppShell.Main>
 
       <AppShell.Footer p="md" style={{ textAlign: "center" }}>
         <Container size="xl">

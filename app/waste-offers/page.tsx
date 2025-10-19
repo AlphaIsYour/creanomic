@@ -117,6 +117,12 @@ export default function WasteOffersPage() {
 
       {/* Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <button
+          onClick={() => router.back()}
+          className="flex items-center gap-2 text-black hover:text-[#8C1007] mb-4"
+        >
+          ← Kembali
+        </button>
         {/* Filter */}
         <WasteOfferFilter
           materialType={materialType}

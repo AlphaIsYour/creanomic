@@ -63,9 +63,7 @@
   flex-direction: column;
   z-index: 1000;
   overflow: hidden;
-  transition:
-    opacity 0.3s ease,
-    transform 0.3s ease;
+  transition: opacity 0.3s ease, transform 0.3s ease;
   opacity: 0;
   transform: translateY(20px) scale(0.95);
   pointer-events: none;
@@ -763,4 +761,9 @@
   background: #ccc;
   margin-top: 10px;
   color: #333;
+}
+
+.message-container.bot {
+  flex-direction: column !important;
+  align-items: flex-start !important;
 }

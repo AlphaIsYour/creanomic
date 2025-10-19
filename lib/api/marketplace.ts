@@ -18,6 +18,7 @@ import {
 export type ProductWithRelations = CraftProduct & {
   pengrajin: {
     id: string;
+    whatsappNumber: true;
     user: { name: string; image: string | null };
     totalProducts: number;
     averageRating: number;
@@ -31,7 +32,12 @@ export type ReviewWithReviewer = Review & {
 };
 
 export type CartItemWithProduct = CartItem & {
-  product: Pick<CraftProduct, "id" | "title" | "price" | "images" | "stock">;
+  product: Pick<CraftProduct, "id" | "title" | "price" | "images" | "stock"> & {
+    pengrajin: {
+      whatsappNumber: string;
+      user: { name: string };
+    };
+  };
 };
 
 export type OrderWithDetails = Order & {
@@ -62,11 +68,19 @@ async function apiFetch<T>(
   const response = await fetch(`${API_BASE_URL}${url}`, options);
 
   if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.message || "Something went wrong");
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || `API Error: ${response.statusText}`);
   }
 
-  return response.json();
+  const jsonResponse = await response.json();
+
+  // Jika response sudah memiliki structure { data, totalPages, currentPage }
+  if (jsonResponse.data !== undefined) {
+    return jsonResponse;
+  }
+
+  // Jika response adalah array atau object langsung, wrap dalam { data }
+  return { data: jsonResponse };
 }
 
 // --- Fungsi untuk Products ---
@@ -109,13 +123,17 @@ export async function fetchProducts(params: FetchProductsParams = {}): Promise<{
   if (params.limit) query.append("limit", params.limit.toString());
   if (params.search) query.append("search", params.search);
 
-  const result = await apiFetch<{
-    data: ProductWithRelations[];
-    totalPages: number;
-    currentPage: number;
-  }>(`/api/marketplace/products?${query.toString()}`, { cache: "no-store" });
+  const result = await apiFetch<ProductWithRelations[]>(
+    `/api/marketplace/products?${query.toString()}`,
+    { cache: "no-store" }
+  );
 
-  return result.data;
+  // result sudah berisi { data, totalPages, currentPage } dari apiFetch
+  return {
+    data: result.data,
+    totalPages: result.totalPages || 1,
+    currentPage: result.currentPage || 1,
+  };
 }
 
 export async function fetchProductById(
@@ -140,10 +158,10 @@ export async function fetchCartItems(): Promise<CartItemWithProduct[]> {
       `/api/marketplace/cart`,
       { cache: "no-store" }
     );
-    return data || []; // ← Tambahkan fallback empty array
+    return data || [];
   } catch (error) {
     console.error("Failed to fetch cart items:", error);
-    return []; // ← Return empty array instead of throwing
+    return [];
   }
 }
 

@@ -1,9 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-
 "use client";
 
 import { motion } from "framer-motion";
-import { Award, Clock, MapPin, TrendingUp } from "lucide-react";
+import {
+  Award,
+  Clock,
+  MapPin,
+  TrendingUp,
+  Package as PackageIcon,
+} from "lucide-react";
 import Image from "next/image";
 
 interface AboutTabProps {
@@ -17,15 +22,16 @@ export default function AboutTab({ user, profileData }: AboutTabProps) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
-      className="space-y-8"
+      className="space-y-6"
     >
       {/* Description */}
       {profileData?.description && (
-        <Section title="Deskripsi">
+        <div className="bg-white rounded-xl p-6 border border-[#2C2C2C] shadow-sm">
+          <h3 className="text-lg font-bold text-[#2C2C2C] mb-3">Deskripsi</h3>
           <p className="text-gray-700 leading-relaxed text-sm whitespace-pre-wrap">
             {profileData.description}
           </p>
-        </Section>
+        </div>
       )}
 
       {/* Pengrajin Specific */}
@@ -33,41 +39,49 @@ export default function AboutTab({ user, profileData }: AboutTabProps) {
         <>
           {/* Craft Types */}
           {profileData.craftTypes?.length > 0 && (
-            <Section title="Jenis Kerajinan">
+            <div className="bg-white rounded-xl p-6 border border-[#2C2C2C] shadow-sm">
+              <h3 className="text-lg font-bold text-[#2C2C2C] mb-4">
+                Jenis Kerajinan
+              </h3>
               <div className="flex flex-wrap gap-2">
                 {profileData.craftTypes.map((type: string, i: number) => (
                   <span
                     key={i}
-                    className="px-3 py-1.5 bg-purple-50 text-purple-700 rounded-lg text-sm font-medium border border-purple-200"
+                    className="px-4 py-2 bg-purple-50 text-purple-700 rounded-lg text-sm font-semibold border-2 border-purple-200 hover:border-purple-400 transition-colors"
                   >
                     {type}
                   </span>
                 ))}
               </div>
-            </Section>
+            </div>
           )}
 
           {/* Experience */}
           {profileData.yearsOfExperience && (
-            <div className="flex items-center gap-3 p-4 bg-amber-50 rounded-xl border border-amber-200">
-              <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                <Award className="w-5 h-5 text-amber-600" />
-              </div>
-              <div>
-                <p className="text-sm text-amber-900 font-semibold">
-                  {profileData.yearsOfExperience} Tahun Pengalaman
-                </p>
-                <p className="text-xs text-amber-700">
-                  Profesional di bidang kerajinan
-                </p>
+            <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-6 border border-amber-300 shadow-sm">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 bg-amber-100 rounded-xl flex items-center justify-center flex-shrink-0 border-2 border-amber-400">
+                  <Award className="w-7 h-7 text-amber-600" />
+                </div>
+                <div>
+                  <p className="text-xl font-bold text-amber-900">
+                    {profileData.yearsOfExperience} Tahun Pengalaman
+                  </p>
+                  <p className="text-sm text-amber-700">
+                    Profesional di bidang kerajinan
+                  </p>
+                </div>
               </div>
             </div>
           )}
 
           {/* Portfolio */}
           {profileData.portfolio?.length > 0 && (
-            <Section title="Portfolio">
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            <div className="bg-white rounded-xl p-6 border border-[#2C2C2C] shadow-sm">
+              <h3 className="text-lg font-bold text-[#2C2C2C] mb-4">
+                Portfolio
+              </h3>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 {profileData.portfolio
                   .slice(0, 6)
                   .map((img: string, i: number) => (
@@ -76,37 +90,40 @@ export default function AboutTab({ user, profileData }: AboutTabProps) {
                       initial={{ opacity: 0, scale: 0.9 }}
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ delay: i * 0.05 }}
-                      className="aspect-square rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow group cursor-pointer"
+                      className="aspect-square rounded-xl overflow-hidden border border-[#2C2C2C] shadow-md hover:shadow-xl transition-all group cursor-pointer"
                     >
                       <Image
                         src={img}
                         alt={`Portfolio ${i + 1}`}
                         width={300}
                         height={300}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                       />
                     </motion.div>
                   ))}
               </div>
-            </Section>
+            </div>
           )}
 
           {/* Specialized Materials */}
           {profileData.specializedMaterials?.length > 0 && (
-            <Section title="Material Yang Digunakan">
+            <div className="bg-white rounded-xl p-6 border border-[#2C2C2C] shadow-sm">
+              <h3 className="text-lg font-bold text-[#2C2C2C] mb-4">
+                Material Yang Digunakan
+              </h3>
               <div className="flex flex-wrap gap-2">
                 {profileData.specializedMaterials.map(
                   (material: string, i: number) => (
                     <span
                       key={i}
-                      className="px-3 py-1.5 bg-green-50 text-green-700 rounded-lg text-sm font-medium border border-green-200"
+                      className="px-4 py-2 bg-green-50 text-green-700 rounded-lg text-sm font-semibold border-2 border-green-200 hover:border-green-400 transition-colors"
                     >
                       {material}
                     </span>
                   )
                 )}
               </div>
-            </Section>
+            </div>
           )}
         </>
       )}
@@ -116,61 +133,72 @@ export default function AboutTab({ user, profileData }: AboutTabProps) {
         <>
           {/* Company Name */}
           {profileData.companyName && (
-            <Section title="Nama Perusahaan">
-              <p className="text-gray-900 text-lg font-medium">
+            <div className="bg-white rounded-xl p-6 border-2 border-[#2C2C2C] shadow-sm">
+              <h3 className="text-lg font-bold text-[#2C2C2C] mb-3">
+                Nama Perusahaan
+              </h3>
+              <p className="text-[#8C1007] text-2xl font-bold">
                 {profileData.companyName}
               </p>
-            </Section>
+            </div>
           )}
 
           {/* Specialized Materials */}
           {profileData.specializedMaterials?.length > 0 && (
-            <Section title="Material Yang Diterima">
+            <div className="bg-white rounded-xl p-6 border-2 border-[#2C2C2C] shadow-sm">
+              <h3 className="text-lg font-bold text-[#2C2C2C] mb-4">
+                Material Yang Diterima
+              </h3>
               <div className="flex flex-wrap gap-2">
                 {profileData.specializedMaterials.map(
                   (material: string, i: number) => (
                     <span
                       key={i}
-                      className="px-3 py-1.5 bg-green-50 text-green-700 rounded-lg text-sm font-medium border border-green-200"
+                      className="px-4 py-2 bg-green-50 text-green-700 rounded-lg text-sm font-semibold border-2 border-green-200 hover:border-green-400 transition-colors"
                     >
                       {material}
                     </span>
                   )
                 )}
               </div>
-            </Section>
+            </div>
           )}
 
           {/* Operating Area */}
           {profileData.operatingArea?.length > 0 && (
-            <Section title="Area Operasional">
+            <div className="bg-white rounded-xl p-6 border-2 border-[#2C2C2C] shadow-sm">
+              <h3 className="text-lg font-bold text-[#2C2C2C] mb-4">
+                Area Operasional
+              </h3>
               <div className="flex flex-wrap gap-2">
                 {profileData.operatingArea.map((area: string, i: number) => (
                   <span
                     key={i}
-                    className="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-sm font-medium border border-blue-200 flex items-center gap-1.5"
+                    className="px-4 py-2 bg-blue-50 text-blue-700 rounded-lg text-sm font-semibold border-2 border-blue-200 hover:border-blue-400 transition-colors flex items-center gap-2"
                   >
-                    <MapPin className="w-3.5 h-3.5" />
+                    <MapPin className="w-4 h-4" />
                     {area}
                   </span>
                 ))}
               </div>
-            </Section>
+            </div>
           )}
 
           {/* Working Hours */}
           {profileData.workingHours && (
-            <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-xl border border-blue-200">
-              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                <Clock className="w-5 h-5 text-blue-600" />
-              </div>
-              <div>
-                <p className="text-sm text-blue-900 font-semibold">
-                  Jam Operasional
-                </p>
-                <p className="text-sm text-blue-700">
-                  {profileData.workingHours}
-                </p>
+            <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl p-6 border-2 border-blue-300 shadow-sm">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0 border-2 border-blue-400">
+                  <Clock className="w-7 h-7 text-blue-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-blue-900 mb-1">
+                    Jam Operasional
+                  </p>
+                  <p className="text-lg font-bold text-blue-700">
+                    {profileData.workingHours}
+                  </p>
+                </div>
               </div>
             </div>
           )}
@@ -178,25 +206,25 @@ export default function AboutTab({ user, profileData }: AboutTabProps) {
           {/* Collection Stats */}
           {profileData.totalCollections > 0 && (
             <div className="grid grid-cols-2 gap-4">
-              <div className="p-4 bg-green-50 rounded-xl border border-green-200">
+              <div className="bg-gradient-to-br from-emerald-50 to-green-50 rounded-xl p-6 border-2 border-emerald-300 shadow-sm">
                 <div className="flex items-center gap-2 mb-2">
-                  <TrendingUp className="w-4 h-4 text-green-600" />
-                  <p className="text-xs text-green-700 font-medium">
+                  <TrendingUp className="w-5 h-5 text-emerald-600" />
+                  <p className="text-xs text-emerald-700 font-semibold uppercase">
                     Total Pengambilan
                   </p>
                 </div>
-                <p className="text-2xl font-bold text-green-900">
+                <p className="text-3xl font-bold text-emerald-900">
                   {profileData.totalCollections}
                 </p>
               </div>
-              <div className="p-4 bg-green-50 rounded-xl border border-green-200">
+              <div className="bg-gradient-to-br from-emerald-50 to-green-50 rounded-xl p-6 border-2 border-emerald-300 shadow-sm">
                 <div className="flex items-center gap-2 mb-2">
-                  <Package className="w-4 h-4 text-green-600" />
-                  <p className="text-xs text-green-700 font-medium">
+                  <PackageIcon className="w-5 h-5 text-emerald-600" />
+                  <p className="text-xs text-emerald-700 font-semibold uppercase">
                     Total Berat
                   </p>
                 </div>
-                <p className="text-2xl font-bold text-green-900">
+                <p className="text-3xl font-bold text-emerald-900">
                   {profileData.totalWeight.toFixed(1)} kg
                 </p>
               </div>
@@ -205,38 +233,5 @@ export default function AboutTab({ user, profileData }: AboutTabProps) {
         </>
       )}
     </motion.div>
-  );
-}
-
-function Section({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div>
-      <h3 className="text-lg font-bold text-gray-900 mb-3">{title}</h3>
-      {children}
-    </div>
-  );
-}
-
-function Package({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
-      />
-    </svg>
   );
 }

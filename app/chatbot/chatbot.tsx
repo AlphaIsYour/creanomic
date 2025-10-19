@@ -5,6 +5,18 @@ import React, { useState } from "react";
 import ChatFab from "@/app/chatbot/components/chatfab";
 import ChatPopup from "@/app/chatbot/components/chatpopup";
 import { MessageData } from "@/app/chatbot/components/message";
+import "./cards.css";
+
+// Import card types
+import { PengepulData } from "@/app/chatbot/components/PengepulCard";
+import { PengrajinData } from "@/app/chatbot/components/PengrajinCard";
+import { WasteOfferData } from "@/app/chatbot/components/WasteOfferCard";
+import { ProductData } from "@/app/chatbot/components/ProductCard";
+
+export interface CardData {
+  type: "PENGEPUL" | "PENGRAJIN" | "WASTE_OFFERS" | "PRODUCTS";
+  data: PengepulData[] | PengrajinData[] | WasteOfferData[] | ProductData[];
+}
 
 const Chatbot: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -21,9 +33,10 @@ const Chatbot: React.FC = () => {
     setIsOpen(!isOpen);
   };
 
-  // Improved streaming response parser
+  // Improved streaming response parser dengan card support
   const parseStreamingResponse = async (
-    response: Response
+    response: Response,
+    onCardData?: (cardData: CardData) => void
   ): Promise<string> => {
     const reader = response.body?.getReader();
     if (!reader) {
@@ -39,21 +52,44 @@ const Chatbot: React.FC = () => {
         if (done) break;
 
         const chunk = decoder.decode(value, { stream: true });
-        console.log("📦 Raw chunk:", chunk.substring(0, 200)); // DEBUG
+        console.log("📦 Raw chunk:", chunk.substring(0, 200));
 
         const lines = chunk.split("\n");
 
         for (const line of lines) {
           if (!line.trim()) continue;
 
-          console.log("📝 Processing line:", line.substring(0, 100)); // DEBUG
+          console.log("📝 Processing line:", line.substring(0, 100));
+
+          // Handle card data: data: __CARD_DATA__TYPE__[{...}]
+          if (line.startsWith("data: __CARD_DATA__")) {
+            try {
+              const content = line.substring(19); // Remove "data: __CARD_DATA__"
+              const [type, jsonStr] = content.split("__");
+
+              if (type && jsonStr) {
+                const cardData = JSON.parse(jsonStr);
+                console.log("🎴 Card data received:", type, cardData.length);
+
+                if (onCardData) {
+                  onCardData({
+                    type: type as CardData["type"],
+                    data: cardData,
+                  });
+                }
+              }
+            } catch (e) {
+              console.error("❌ Card parse error:", e);
+            }
+            continue;
+          }
 
           // Handle SSE format: data: ...
           if (line.startsWith("data: ")) {
             const content = line.substring(6).trim();
             if (content && content !== "[DONE]") {
               result += content;
-              console.log("✅ Added from SSE:", content.substring(0, 50)); // DEBUG
+              console.log("✅ Added from SSE:", content.substring(0, 50));
             }
           }
           // Handle AI SDK format: 0:"text"
@@ -66,7 +102,7 @@ const Chatbot: React.FC = () => {
                 .replace(/\\n/g, "\n")
                 .replace(/\\\\/g, "\\");
               result += text;
-              console.log("✅ Added from AI SDK:", text.substring(0, 50)); // DEBUG
+              console.log("✅ Added from AI SDK:", text.substring(0, 50));
             }
           }
         }
@@ -75,7 +111,7 @@ const Chatbot: React.FC = () => {
       reader.releaseLock();
     }
 
-    console.log("🎯 Final result:", result.substring(0, 200)); // DEBUG
+    console.log("🎯 Final result:", result.substring(0, 200));
     return result.trim();
   };
 
@@ -89,11 +125,14 @@ const Chatbot: React.FC = () => {
     setMessages((prevMessages) => [...prevMessages, userMessage]);
     setIsLoading(true);
 
+    // Temporary card storage
+    let receivedCardData: CardData | null = null;
+
     try {
-      // Format chat history for API (exclude initial message)
+      // Format chat history for API
       const chatHistory = messages
         .filter((msg) => msg.id !== "initial-1")
-        .slice(-6); // Keep last 6 messages for context
+        .slice(-6);
 
       const formattedMessages = [
         ...chatHistory.map((msg) => ({
@@ -126,7 +165,6 @@ const Chatbot: React.FC = () => {
       let botText = "";
       const contentType = response.headers.get("content-type");
 
-      // Check if it's an error JSON response
       if (contentType?.includes("application/json")) {
         try {
           const jsonData = await response.json();
@@ -142,30 +180,28 @@ const Chatbot: React.FC = () => {
         contentType?.includes("text/plain") ||
         contentType?.includes("text/event-stream")
       ) {
-        // Handle streaming response
         try {
-          botText = await parseStreamingResponse(response);
+          botText = await parseStreamingResponse(response, (cardData) => {
+            receivedCardData = cardData;
+          });
           console.log("✅ Parsed streaming text:", botText.substring(0, 100));
         } catch (streamError) {
           console.error("❌ Streaming parse error:", streamError);
-          // Fallback to regular text parsing
           botText = await response.text();
         }
       } else {
-        // Fallback: try to get text directly
         botText = await response.text();
       }
 
       // Clean up response
       botText = botText
-        .replace(/^f:\{[^}]*\}\s*/g, "") // Remove metadata
-        .replace(/e:\{[^}]*\}\s*$/g, "") // Remove end metadata
-        .replace(/d:\{[^}]*\}\s*$/g, "") // Remove done metadata
+        .replace(/^f:\{[^}]*\}\s*/g, "")
+        .replace(/e:\{[^}]*\}\s*$/g, "")
+        .replace(/d:\{[^}]*\}\s*$/g, "")
         .trim();
 
       console.log("🤖 Final bot text:", botText.substring(0, 100));
 
-      // Better fallback message
       if (!botText || botText.length < 3) {
         console.warn("⚠️ Empty response detected");
         botText =
@@ -176,6 +212,7 @@ const Chatbot: React.FC = () => {
         id: Date.now().toString() + "-bot",
         text: botText,
         sender: "bot",
+        cardData: receivedCardData || undefined,
       };
 
       setMessages((prevMessages) => [...prevMessages, botMessage]);

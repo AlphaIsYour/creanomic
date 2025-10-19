@@ -180,7 +180,7 @@ export default function PengrajinProfileClient({ pengrajin }: any) {
                 {pengrajin.products.map((product: any) => (
                   <Link
                     key={product.id}
-                    href={`/pengrajin/products/${product.id}`}
+                    href={`/marketplace/products/${product.id}`}
                     className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
                   >
                     <div className="relative h-48 bg-gray-100">
