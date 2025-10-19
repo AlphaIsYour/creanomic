@@ -5,6 +5,45 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
+// GET - Get single product
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ productId: string }> }
+) {
+  try {
+    const { productId } = await params;
+
+    const product = await prisma.craftProduct.findUnique({
+      where: { id: productId },
+      include: {
+        pengrajin: {
+          include: {
+            user: {
+              select: {
+                name: true,
+                image: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!product) {
+      return NextResponse.json({ error: "Product not found" }, { status: 404 });
+    }
+
+    return NextResponse.json(product);
+  } catch (error) {
+    console.error("Error fetching product:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch product" },
+      { status: 500 }
+    );
+  }
+}
+
+// PUT - Update product (SUDAH ADA DI FILE KAMU)
 export async function PUT(
   req: NextRequest,
   props: { params: Promise<{ productId: string }> }
@@ -58,6 +97,7 @@ export async function PUT(
   }
 }
 
+// DELETE - Delete product (SUDAH ADA DI FILE KAMU)
 export async function DELETE(
   req: NextRequest,
   props: { params: Promise<{ productId: string }> }

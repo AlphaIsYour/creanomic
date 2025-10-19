@@ -202,8 +202,9 @@ export class RoutingManager {
       const startMarker = L.marker(startPoint, {
         icon: L.icon({
           iconUrl: "/marker/user-location.svg",
-          iconSize: [24, 24],
-          iconAnchor: [12, 12],
+          iconSize: [32, 32] as [number, number],
+          iconAnchor: [16, 32] as [number, number],
+          popupAnchor: [0, -32] as [number, number],
         }),
       }).bindPopup("Lokasi Anda");
 
@@ -235,27 +236,40 @@ export class RoutingManager {
     const distance = this.formatDistance(routeData.distance);
     const duration = this.formatDuration(routeData.duration);
 
+    // Generate unique ID untuk popup ini
+    const popupId = `route-info-${Date.now()}`;
+
     return `
-      <div class="bg-white rounded-lg shadow-lg border border-gray-200 p-3 text-xs font-medium">
-        <div class="text-center text-blue-600 font-semibold mb-1">
-          Rute ke ${destinationName}
+    <div id="${popupId}" class="bg-white rounded-lg shadow-lg border border-gray-200 p-3 text-xs font-medium relative">
+      <button 
+        onclick="document.getElementById('${popupId}').style.display='none'"
+        class="absolute -top-1 -right-1 bg-red-500 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center shadow-md transition-colors z-10"
+        title="Tutup"
+      >
+        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+      
+      <div class="text-center text-blue-600 font-semibold mb-1">
+        Rute ke ${destinationName}
+      </div>
+      <div class="flex justify-between space-x-4 text-gray-600">
+        <div class="flex items-center">
+          <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+          </svg>
+          ${distance}
         </div>
-        <div class="flex justify-between space-x-4 text-gray-600">
-          <div class="flex items-center">
-            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-            </svg>
-            ${distance}
-          </div>
-          <div class="flex items-center">
-            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
-            ${duration}
-          </div>
+        <div class="flex items-center">
+          <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          ${duration}
         </div>
       </div>
-    `;
+    </div>
+  `;
   }
 
   private fitMapToRoute(start: [number, number], end: [number, number]): void {

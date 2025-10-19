@@ -278,7 +278,7 @@ export default function RegisterPage() {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8C1007] focus:border-transparent outline-none transition-all"
+                    className="w-full pl-10 pr-4 text-black py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8C1007] focus:border-transparent outline-none transition-all"
                     placeholder="masukkan email Anda"
                     required
                   />
@@ -439,7 +439,7 @@ export default function RegisterPage() {
             >
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Nama Lengkap
+                  Username
                 </label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -447,8 +447,8 @@ export default function RegisterPage() {
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8C1007] focus:border-transparent outline-none transition-all"
-                    placeholder="masukkan nama lengkap"
+                    className="w-full pl-10 pr-4 py-3 border text-black border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8C1007] focus:border-transparent outline-none transition-all"
+                    placeholder="masukkan username Anda"
                     required
                   />
                 </div>
@@ -464,7 +464,7 @@ export default function RegisterPage() {
                     type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8C1007] focus:border-transparent outline-none transition-all"
+                    className="w-full pl-10 pr-12 py-3 border text-black border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8C1007] focus:border-transparent outline-none transition-all"
                     placeholder="minimal 6 karakter"
                     required
                   />
@@ -492,7 +492,7 @@ export default function RegisterPage() {
                     type={showConfirmPassword ? "text" : "password"}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8C1007] focus:border-transparent outline-none transition-all"
+                    className="w-full pl-10 pr-12 text-black py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8C1007] focus:border-transparent outline-none transition-all"
                     placeholder="ulangi password"
                     required
                   />

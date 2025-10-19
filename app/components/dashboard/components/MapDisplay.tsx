@@ -31,9 +31,13 @@ import { createPopupContent } from "@/app/components/dashboard/utils/popupTempla
 
 interface MapComponentProps {
   onDistrictsLoaded?: (districts: string[]) => void;
+  onSearchReady?: (searchFn: (query: string) => Promise<void>) => void; // ← TAMBAH INI
 }
 
-export default function MapComponent({ onDistrictsLoaded }: MapComponentProps) {
+export default function MapComponent({
+  onDistrictsLoaded,
+  onSearchReady,
+}: MapComponentProps) {
   const mapRef = useRef<L.Map | null>(null);
   const layerGroupsRef = useRef<{ [key: string]: L.LayerGroup }>({});
   const [isLoading, setIsLoading] = useState(true);
@@ -470,10 +474,7 @@ export default function MapComponent({ onDistrictsLoaded }: MapComponentProps) {
     routing,
   ]);
 
-  const handleSearchWithToast = async (
-    query: string,
-    searchType: "location" | "entity"
-  ) => {
+  const handleSearchWithToast = async (query: string) => {
     if (!query?.trim()) {
       showCustomToast("Masukkan kata kunci pencarian", "error");
       return;
@@ -481,13 +482,8 @@ export default function MapComponent({ onDistrictsLoaded }: MapComponentProps) {
 
     try {
       showCustomToast("Mencari...", "loading");
-      await handleSearch(query.trim(), searchType);
-
-      if (searchType === "entity") {
-        showCustomToast(`Hasil pencarian "${query}" ditemukan!`, "success");
-      } else {
-        showCustomToast(`Lokasi "${query}" ditemukan!`, "success");
-      }
+      await handleSearch(query.trim());
+      showCustomToast(`Hasil pencarian "${query}" ditampilkan!`, "success");
     } catch (error) {
       console.error("Search error:", error);
       const errorMessage =
@@ -497,6 +493,11 @@ export default function MapComponent({ onDistrictsLoaded }: MapComponentProps) {
       showCustomToast(errorMessage, "error");
     }
   };
+  useEffect(() => {
+    if (onSearchReady) {
+      onSearchReady(handleSearchWithToast);
+    }
+  }, [onSearchReady, handleSearchWithToast]);
 
   return (
     <div className="relative h-screen w-full">

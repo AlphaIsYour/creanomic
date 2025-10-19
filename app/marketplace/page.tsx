@@ -1,45 +1,50 @@
 // app/marketplace/page.tsx
-import { Flex, Container, Title, Text, SimpleGrid } from "@mantine/core";
+export const dynamic = "force-dynamic";
 import ProductCard from "@/app/marketplace/components/ProductCard";
 import { fetchProducts } from "@/lib/api/marketplace";
 
 export default async function MarketplaceHomePage() {
-  // Ambil beberapa produk untuk ditampilkan di homepage
-  const { data: products } = await fetchProducts({ limit: 8, sort: "newest" });
+  try {
+    // Ambil beberapa produk untuk ditampilkan di homepage
+    const result = await fetchProducts({ limit: 8, sort: "newest" });
 
-  return (
-    <Container size="xl" py="lg">
-      <Flex
-        direction="column"
-        align="center"
-        justify="center"
-        h={200}
-        bg="blue.0"
-        mb="xl"
-        style={{ borderRadius: "8px" }}
-      >
-        <Title order={1} c="blue.8">
-          Selamat Datang di Daurin Marketplace!
-        </Title>
-        <Text size="lg" mt="sm">
-          Temukan produk kerajinan unik dan ramah lingkungan.
-        </Text>
-      </Flex>
+    console.log("RESULT:", result);
+    console.log("PRODUCTS:", result.data);
 
-      <Title order={2} mb="md">
-        Produk Terbaru
-      </Title>
-      {products && products.length > 0 ? (
-        <SimpleGrid cols={{ base: 1, sm: 2, md: 3, lg: 4 }} spacing="md">
-          {products.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </SimpleGrid>
-      ) : (
-        <Text c="dimmed">Belum ada produk terbaru saat ini.</Text>
-      )}
+    const products = result.data;
 
-      {/* Bisa ditambahkan bagian lain seperti kategori populer, pengrajin unggulan, dll. */}
-    </Container>
-  );
+    return (
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        {/* Hero Section */}
+        <div className="flex flex-col items-center justify-center h-52 bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg mb-12">
+          <h1 className="text-4xl font-bold text-blue-900 mb-2">
+            Selamat Datang di Daurin Marketplace!
+          </h1>
+          <p className="text-lg text-blue-700">
+            Temukan produk kerajinan unik dan ramah lingkungan.
+          </p>
+        </div>
+
+        {/* Products Section */}
+        <h2 className="text-2xl font-bold text-gray-900 mb-6">
+          Produk Terbaru
+        </h2>
+
+        {products && products.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {products.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
+            <p className="text-gray-500">Belum ada produk terbaru saat ini.</p>
+          </div>
+        )}
+      </div>
+    );
+  } catch (error) {
+    console.error("ERROR FETCHING:", error);
+    return <div>Error loading products</div>;
+  }
 }

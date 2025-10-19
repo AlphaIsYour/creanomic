@@ -4,6 +4,7 @@ import {
   WasteFacility,
   WasteOffer,
   TPST3RProperties,
+  CraftProduct,
 } from "@/app/components/dashboard/types/map.types";
 
 export const createPopupContent = {
@@ -111,7 +112,7 @@ export const createPopupContent = {
           
           <div class="flex space-x-2 pt-1">
             <button onclick="window.open('/pengepul/${
-              pengepul.userId
+              pengepul.id
             }', '_blank')" class="flex-1 bg-gradient-to-r from-green-600 to-emerald-700 hover:from-green-700 hover:to-emerald-800 text-white text-xs font-semibold py-2.5 px-4 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 flex items-center justify-center space-x-2">
               <span>Lihat Profil</span>
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -292,7 +293,7 @@ export const createPopupContent = {
           
           <div class="flex space-x-2 pt-1">
             <button onclick="window.open('/pengrajin/${
-              pengrajin.userId
+              pengrajin.id
             }', '_blank')" class="flex-1 bg-gradient-to-r from-orange-600 to-amber-700 hover:from-orange-700 hover:to-amber-800 text-white text-xs font-semibold py-2.5 px-4 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 flex items-center justify-center space-x-2">
               <span>Lihat Profil</span>
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -300,11 +301,14 @@ export const createPopupContent = {
               </svg>
             </button>
             ${
-              pengrajin.workshopLatitude && pengrajin.workshopLongitude
+              (pengrajin.workshopLatitude && pengrajin.workshopLongitude) ||
+              (pengrajin.user?.latitude && pengrajin.user?.longitude)
                 ? `
-              <button onclick="window.showRoute && window.showRoute(${
-                pengrajin.workshopLatitude
-              }, ${pengrajin.workshopLongitude}, '${crafterName.replace(
+      <button onclick="window.showRoute && window.showRoute(${
+        pengrajin.workshopLatitude || pengrajin.user?.latitude
+      }, ${
+                    pengrajin.workshopLongitude || pengrajin.user?.longitude
+                  }, '${crafterName.replace(
                     /'/g,
                     "\\'"
                   )}')" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold py-2.5 px-3 rounded-lg transition-colors duration-150 shadow-sm flex items-center justify-center" title="Tampilkan Rute">
@@ -640,5 +644,71 @@ export const createPopupContent = {
       </div>
     </div>
   `;
+  },
+
+  product: (product: CraftProduct) => {
+    const imageUrl = product.images[0] || "/placeholder-product.jpg";
+    const priceFormatted = new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+    }).format(product.price);
+
+    return `
+      <div class="product-popup">
+        <div class="relative h-40 w-full overflow-hidden rounded-t-lg">
+          <img
+            src="${imageUrl}"
+            alt="${product.title}"
+            class="w-full h-full object-cover"
+          />
+        </div>
+        <div class="p-4">
+          <h3 class="font-bold text-lg text-gray-800 mb-2">${product.title}</h3>
+          <p class="text-sm text-gray-600 mb-3 line-clamp-2">${
+            product.description
+          }</p>
+          
+          <div class="space-y-2 mb-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs text-gray-500">Harga</span>
+              <span class="font-bold text-[#8C1007]">${priceFormatted}</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-xs text-gray-500">Stok</span>
+              <span class="text-sm font-medium">${product.stock} pcs</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-xs text-gray-500">Kategori</span>
+              <span class="text-sm">${product.category}</span>
+            </div>
+          </div>
+
+          <div class="border-t pt-3 mb-3">
+            <div class="flex items-center gap-2">
+              <img 
+                src="${
+                  product.pengrajin.user.image || "/avatar-placeholder.png"
+                }" 
+                alt="${product.pengrajin.user.name}"
+                class="w-8 h-8 rounded-full"
+              />
+              <div>
+                <p class="text-xs text-gray-500">Pengrajin</p>
+                <p class="text-sm font-medium">${
+                  product.pengrajin.user.name
+                }</p>
+              </div>
+            </div>
+          </div>
+
+          <button
+            onclick="window.open('/products/${product.id}', '_blank')"
+            class="w-full bg-[#8C1007] text-white py-2 px-4 rounded-lg hover:bg-[#7a0d06] transition-colors text-sm font-medium"
+          >
+            Lihat Detail Produk
+          </button>
+        </div>
+      </div>
+    `;
   },
 };

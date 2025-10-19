@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 // app/api/pengrajins/search/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
@@ -47,18 +46,6 @@ export async function GET(request: NextRequest) {
                 description: {
                   contains: searchTerm,
                   mode: "insensitive",
-                },
-              },
-              // Search by craft types (array field)
-              {
-                craftTypes: {
-                  hasSome: [searchTerm],
-                },
-              },
-              // Search by specialized materials (array field)
-              {
-                specializedMaterials: {
-                  hasSome: [searchTerm.toUpperCase() as any],
                 },
               },
               // Search by workshop address

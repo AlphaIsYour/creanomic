@@ -80,7 +80,7 @@ export default function CreateWasteOfferPage() {
     }
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
 
@@ -89,12 +89,32 @@ export default function CreateWasteOfferPage() {
       return;
     }
 
-    // In production, upload to cloud storage
-    // For now, we'll use placeholder URLs
-    const newImages = Array.from(files).map((file) =>
-      URL.createObjectURL(file)
-    );
-    setImages([...images, ...newImages]);
+    setLoading(true); // Atau buat state uploadingImages
+
+    const uploadedUrls: string[] = [];
+
+    for (const file of Array.from(files)) {
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const response = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!response.ok) throw new Error("Upload failed");
+
+        const { url } = await response.json();
+        uploadedUrls.push(url); // ✅ URL asli dari Vercel Blob
+      } catch (error) {
+        console.error("Upload error:", error);
+        alert("Gagal upload gambar");
+      }
+    }
+
+    setImages([...images, ...uploadedUrls]);
+    setLoading(false);
   };
 
   const removeImage = (index: number) => {
@@ -268,7 +288,7 @@ export default function CreateWasteOfferPage() {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Contoh: Botol Plastik Bersih 20kg"
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#8C1007] focus:border-transparent"
+              className="w-full text-black px-4 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#8C1007] focus:border-transparent"
             />
           </div>
 
@@ -283,7 +303,7 @@ export default function CreateWasteOfferPage() {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Jelaskan kondisi dan detail sampah Anda..."
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#8C1007] focus:border-transparent"
+              className="w-full text-black px-4 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#8C1007] focus:border-transparent"
             />
           </div>
 
@@ -299,7 +319,7 @@ export default function CreateWasteOfferPage() {
                 onChange={(e) =>
                   setMaterialType(e.target.value as MaterialType)
                 }
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#8C1007] focus:border-transparent"
+                className="w-full text-black px-4 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#8C1007] focus:border-transparent"
               >
                 {Object.entries(MATERIAL_TYPE_LABELS).map(([key, label]) => (
                   <option key={key} value={key}>
@@ -320,7 +340,7 @@ export default function CreateWasteOfferPage() {
                 value={weight}
                 onChange={(e) => setWeight(e.target.value)}
                 placeholder="Estimasi berat"
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#8C1007] focus:border-transparent"
+                className="w-full text-black px-4 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#8C1007] focus:border-transparent"
               />
             </div>
           </div>
@@ -335,7 +355,7 @@ export default function CreateWasteOfferPage() {
               value={condition}
               onChange={(e) => setCondition(e.target.value)}
               placeholder="Contoh: Bersih, sudah dipilah, kering"
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#8C1007] focus:border-transparent"
+              className="w-full text-black px-4 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#8C1007] focus:border-transparent"
             />
           </div>
 
@@ -349,7 +369,7 @@ export default function CreateWasteOfferPage() {
                 required
                 value={offerType}
                 onChange={(e) => setOfferType(e.target.value as OfferType)}
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#8C1007] focus:border-transparent"
+                className="w-full text-black px-4 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#8C1007] focus:border-transparent"
               >
                 {Object.entries(OFFER_TYPE_LABELS).map(([key, label]) => (
                   <option key={key} value={key}>
@@ -370,7 +390,7 @@ export default function CreateWasteOfferPage() {
                   value={suggestedPrice}
                   onChange={(e) => setSuggestedPrice(e.target.value)}
                   placeholder="Harga estimasi"
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#8C1007] focus:border-transparent"
+                  className="w-full text-black px-4 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#8C1007] focus:border-transparent"
                 />
               </div>
             )}

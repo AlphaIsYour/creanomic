@@ -74,7 +74,18 @@ export default function SettingsPage({ userId }: { userId: string }) {
       const res = await fetch(`/api/pengrajin/settings/${userId}`);
       const data = await res.json();
       setUserData(data.user);
-      setPengrajinData(data.pengrajinProfile);
+      setPengrajinData({
+        craftTypes: data.craftTypes || [],
+        specializedMaterials: data.specializedMaterials || [],
+        portfolio: data.portfolio || [],
+        yearsOfExperience: data.yearsOfExperience,
+        description: data.description,
+        instagramHandle: data.instagramHandle,
+        whatsappNumber: data.whatsappNumber,
+        workshopAddress: data.workshopAddress,
+        workshopLatitude: data.workshopLatitude,
+        workshopLongitude: data.workshopLongitude,
+      });
     } catch (error) {
       console.error("Error fetching settings:", error);
     } finally {
@@ -237,7 +248,7 @@ export default function SettingsPage({ userId }: { userId: string }) {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Nama Lengkap
+                      Username
                     </label>
                     <input
                       type="text"
@@ -325,7 +336,7 @@ export default function SettingsPage({ userId }: { userId: string }) {
                     </label>
                     <input
                       type="text"
-                      value={pengrajinData.craftTypes.join(", ")}
+                      value={pengrajinData.craftTypes.join(", ") || ""}
                       onChange={(e) =>
                         setPengrajinData({
                           ...pengrajinData,

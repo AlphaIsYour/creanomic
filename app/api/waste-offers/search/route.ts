@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 // app/api/waste-offers/search/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
@@ -44,12 +43,6 @@ export async function GET(request: NextRequest) {
                   mode: "insensitive",
                 },
               },
-              // Search by material type
-              {
-                materialType: {
-                  equals: searchTerm.toUpperCase() as any,
-                },
-              },
               // Search by address
               {
                 address: {
@@ -62,12 +55,6 @@ export async function GET(request: NextRequest) {
                 condition: {
                   contains: searchTerm,
                   mode: "insensitive",
-                },
-              },
-              // Search by offer type
-              {
-                offerType: {
-                  equals: searchTerm.toUpperCase() as any,
                 },
               },
             ],

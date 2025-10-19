@@ -51,61 +51,66 @@ export default function WasteOfferCard({
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow">
-      {/* Image */}
-      <div className="relative h-48 bg-gray-100">
-        {offer.images && offer.images.length > 0 ? (
-          <Image
-            src={offer.images[0]}
-            alt={offer.title}
-            fill
-            className="object-cover"
-          />
-        ) : (
-          <div className="flex items-center justify-center h-full">
-            <svg
-              className="w-16 h-16 text-gray-300"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={1.5}
-                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-              />
-            </svg>
-          </div>
-        )}
+      {/* Image - Clickable */}
+      <Link href={`/waste-offers/${offer.id}`}>
+        <div className="relative h-48 bg-gray-100 cursor-pointer hover:opacity-90 transition-opacity">
+          {offer.images && offer.images.length > 0 ? (
+            <Image
+              src={offer.images[0]}
+              alt={offer.title}
+              fill
+              className="object-cover"
+            />
+          ) : (
+            <div className="flex items-center justify-center h-full">
+              <svg
+                className="w-16 h-16 text-gray-300"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
+              </svg>
+            </div>
+          )}
 
-        {/* Badges */}
-        <div className="absolute top-3 left-3 flex gap-2">
-          <span
-            className={`px-2.5 py-1 rounded-full text-xs font-medium ${getOfferTypeColor(
-              offer.offerType
-            )}`}
-          >
-            {OFFER_TYPE_LABELS[offer.offerType]}
-          </span>
-          <span
-            className={`px-2.5 py-1 rounded-full text-xs font-medium border ${getStatusColor(
-              offer.status
-            )}`}
-          >
-            {offer.status === "AVAILABLE" && "Tersedia"}
-            {offer.status === "RESERVED" && "Direservasi"}
-            {offer.status === "TAKEN" && "Diambil"}
-            {offer.status === "COMPLETED" && "Selesai"}
-            {offer.status === "CANCELLED" && "Dibatalkan"}
-          </span>
+          {/* Badges */}
+          <div className="absolute top-3 left-3 flex gap-2">
+            <span
+              className={`px-2.5 py-1 rounded-full text-xs font-medium ${getOfferTypeColor(
+                offer.offerType
+              )}`}
+            >
+              {OFFER_TYPE_LABELS[offer.offerType]}
+            </span>
+            <span
+              className={`px-2.5 py-1 rounded-full text-xs font-medium border ${getStatusColor(
+                offer.status
+              )}`}
+            >
+              {offer.status === "AVAILABLE" && "Tersedia"}
+              {offer.status === "RESERVED" && "Direservasi"}
+              {offer.status === "TAKEN" && "Diambil"}
+              {offer.status === "COMPLETED" && "Selesai"}
+              {offer.status === "CANCELLED" && "Dibatalkan"}
+            </span>
+          </div>
         </div>
-      </div>
+      </Link>
 
       {/* Content */}
       <div className="p-4">
-        <h3 className="font-semibold text-gray-900 text-lg mb-1 line-clamp-1">
-          {offer.title}
-        </h3>
+        {/* Title - Clickable */}
+        <Link href={`/waste-offers/${offer.id}`}>
+          <h3 className="font-semibold text-gray-900 text-lg mb-1 line-clamp-1 hover:text-[#8C1007] transition-colors cursor-pointer">
+            {offer.title}
+          </h3>
+        </Link>
 
         <div className="flex items-center gap-2 text-sm text-gray-600 mb-3">
           <svg

@@ -55,7 +55,7 @@ export default function WasteOfferFilter({
               placeholder="Cari penawaran..."
               value={search || ""}
               onChange={(e) => onSearchChange(e.target.value)}
-              className="w-full px-3 py-2 pl-9 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#8C1007] focus:border-transparent"
+              className="w-full text-black px-3 py-2 pl-9 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#8C1007] focus:border-transparent"
             />
             <svg
               className="absolute left-3 top-2.5 w-4 h-4 text-gray-400"
@@ -83,7 +83,7 @@ export default function WasteOfferFilter({
             onChange={(e) =>
               onMaterialTypeChange(e.target.value as MaterialType | "")
             }
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#8C1007] focus:border-transparent"
+            className="w-full text-black px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#8C1007] focus:border-transparent"
           >
             <option value="">Semua Material</option>
             {Object.entries(MATERIAL_TYPE_LABELS).map(([key, label]) => (
@@ -104,7 +104,7 @@ export default function WasteOfferFilter({
             onChange={(e) =>
               onOfferTypeChange(e.target.value as OfferType | "")
             }
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#8C1007] focus:border-transparent"
+            className="w-full text-black px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#8C1007] focus:border-transparent"
           >
             <option value="">Semua Tipe</option>
             {Object.entries(OFFER_TYPE_LABELS).map(([key, label]) => (

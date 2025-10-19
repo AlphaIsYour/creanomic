@@ -1,4 +1,4 @@
-// app/api/pengrajins/route.ts
+// app/api/pengrajin/route.ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
@@ -6,7 +6,7 @@ export async function GET() {
   try {
     const pengrajins = await prisma.pengrajinProfile.findMany({
       where: {
-        approvalStatus: "APPROVED", // Hanya tampilkan yang sudah approved
+        approvalStatus: "APPROVED",
       },
       select: {
         id: true,
@@ -37,6 +37,7 @@ export async function GET() {
           },
         },
       },
+      orderBy: [{ averageRating: "desc" }, { totalProducts: "desc" }],
     });
 
     // Filter: harus punya workshop location ATAU user location

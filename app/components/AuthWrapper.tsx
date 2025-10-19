@@ -11,6 +11,7 @@ import { UserSection } from "./home/UserSection";
 import { TestimonialsSection } from "./home/TestimonialsSection";
 import { AboutSection } from "./home/AboutSection";
 import { DashboardLayout } from "@/app/components/dashboard/DashboardLayout";
+import { Loader2 } from "lucide-react";
 
 interface AuthWrapperProps {
   children?: ReactNode;
@@ -21,12 +22,10 @@ export function AuthWrapper({ children }: AuthWrapperProps) {
 
   if (status === "loading") {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#F4E1D2] to-white flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
         <div className="text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-[#8C1007] to-[#8C1007]/80 rounded-xl flex items-center justify-center mx-auto mb-4">
-            <div className="w-8 h-8 bg-[#F4E1D2] rounded-md animate-pulse"></div>
-          </div>
-          <p className="text-[#2C2C2C] font-medium">Memuat...</p>
+          <Loader2 className="w-10 h-10 animate-spin text-[#8C1007] mx-auto mb-3" />
+          <p className="text-gray-600 text-sm">Memuat...</p>
         </div>
       </div>
     );

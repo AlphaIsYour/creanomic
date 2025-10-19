@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 
 import { useState, useEffect } from "react";
@@ -68,7 +67,7 @@ export default function BookingsPage({
 
   const fetchBookings = async () => {
     try {
-      const res = await fetch(`/api/pengrajin/bookings/${userId}`);
+      const res = await fetch(`/api/pengrajin/bookings`);
       const data = await res.json();
       setBookings(data.bookings);
       setStats(data.stats);

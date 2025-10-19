@@ -102,7 +102,7 @@ const ChatFab: React.FC<ChatFabProps> = ({ onClick, isOpen }) => {
             unoptimized
           />
           <button
-            className="absolute -top-1 -right-1 md:-top-[1px] md:-right-[7px] bg-red-500 hover:bg-red-600 border-2 border-white rounded-full w-4 h-4 md:w-5 md:h-5 flex items-center justify-center cursor-pointer text-white text-xs transition-all duration-200 ease-in-out hover:scale-110 z-[999]"
+            className="absolute -top-1 -right-1 md:-top-[1px] md:right-[14px] bg-red-500 hover:bg-red-600 border-2 border-white rounded-full w-4 h-4 md:w-5 md:h-5 flex items-center justify-center cursor-pointer text-white text-xs transition-all duration-200 ease-in-out hover:scale-110 z-[999]"
             onClick={handleDismissWelcomeImage}
             aria-label="Tutup gambar"
           >

@@ -44,8 +44,9 @@ export const useUserLocation = (mapRef: React.RefObject<L.Map | null>) => {
 
             const userIcon = L.icon({
               iconUrl: "/marker/user-location.svg",
-              iconSize: [24, 24],
-              iconAnchor: [12, 12],
+              iconSize: [32, 32] as [number, number],
+              iconAnchor: [16, 32] as [number, number],
+              popupAnchor: [0, -32] as [number, number],
             });
 
             const marker = L.marker([location.latitude, location.longitude], {
@@ -54,7 +55,7 @@ export const useUserLocation = (mapRef: React.RefObject<L.Map | null>) => {
 
             marker.bindPopup(`
               <div class="text-center p-2">
-                <div class="text-sm font-semibold text-blue-600">📍 Lokasi Anda</div>
+                <div class="text-sm font-semibold text-blue-600">Lokasi Anda</div>
                 <div class="text-xs text-gray-500 mt-1">
                   Lat: ${location.latitude.toFixed(6)}<br>
                   Lng: ${location.longitude.toFixed(6)}

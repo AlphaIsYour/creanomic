@@ -290,7 +290,7 @@ export default function SettingsPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Nama Lengkap
+                      Username
                     </label>
                     <input
                       type="text"
@@ -299,7 +299,7 @@ export default function SettingsPage() {
                         handleInputChange("name", e.target.value)
                       }
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8C1007] focus:border-transparent"
-                      placeholder="Masukkan nama lengkap"
+                      placeholder="Masukkan username Anda"
                     />
                   </div>
 

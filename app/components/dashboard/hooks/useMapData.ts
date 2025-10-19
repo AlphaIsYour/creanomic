@@ -202,7 +202,11 @@ export const useMapData = (mapRef: React.MutableRefObject<L.Map | null>) => {
     pengrajinLayerRef.current.clearLayers();
 
     pengrajins.forEach((pengrajin: Pengrajin) => {
-      if (pengrajin.workshopLatitude && pengrajin.workshopLongitude) {
+      // Fallback ke user location kalau workshop kosong
+      const lat = pengrajin.workshopLatitude || pengrajin.user.latitude;
+      const lng = pengrajin.workshopLongitude || pengrajin.user.longitude;
+
+      if (lat && lng) {
         const markerIcon = L.icon({
           iconUrl: "/marker/pengrajin.svg",
           iconSize: [32, 32],
@@ -210,10 +214,7 @@ export const useMapData = (mapRef: React.MutableRefObject<L.Map | null>) => {
           popupAnchor: [0, -32],
         });
 
-        const marker = L.marker(
-          [pengrajin.workshopLatitude, pengrajin.workshopLongitude],
-          { icon: markerIcon }
-        );
+        const marker = L.marker([lat, lng], { icon: markerIcon });
 
         const popupContent = createPopupContent.pengrajin(pengrajin);
         marker.bindPopup(popupContent, {

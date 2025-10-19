@@ -1,24 +1,25 @@
-// app/marketplace/layout.tsx (Server Component)
+// app/marketplace/layout.tsx
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import MarketplaceLayoutClient from "./MarketplaceLayoutClient";
 import QueryProvider from "@/app/providers/QueryProvider";
-
-interface MarketplaceLayoutProps {
-  children: React.ReactNode;
-}
+import { MantineProvider } from "@mantine/core";
+import "@mantine/core/styles.css";
 
 export default async function MarketplaceLayout({
   children,
-}: MarketplaceLayoutProps) {
+}: {
+  children: React.ReactNode;
+}) {
   const session = await getServerSession(authOptions);
 
-  // Wrap dengan QueryProvider di luar MarketplaceLayoutClient
   return (
     <QueryProvider>
-      <MarketplaceLayoutClient session={session}>
-        {children}
-      </MarketplaceLayoutClient>
+      <MantineProvider>
+        <MarketplaceLayoutClient session={session}>
+          {children}
+        </MarketplaceLayoutClient>
+      </MantineProvider>
     </QueryProvider>
   );
 }

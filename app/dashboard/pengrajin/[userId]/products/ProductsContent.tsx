@@ -1,9 +1,9 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import { useState, useEffect } from "react";
 import DashboardLayout from "@/app/dashboard/pengrajin/[userId]/components/DashboardLayout";
+import ProductFormModal from "@/app/dashboard/pengrajin/[userId]/components/ProductFormModal";
 import {
   PlusIcon,
   MagnifyingGlassIcon,
@@ -49,6 +49,7 @@ export default function ProductsPage({ userId }: { userId: string }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState("ALL");
   const [showAddModal, setShowAddModal] = useState(false);
+  const [editProduct, setEditProduct] = useState<Product | null>(null);
 
   useEffect(() => {
     fetchProducts();
@@ -56,7 +57,7 @@ export default function ProductsPage({ userId }: { userId: string }) {
 
   const fetchProducts = async () => {
     try {
-      const res = await fetch(`/api/pengrajin/products/${userId}`);
+      const res = await fetch(`/api/pengrajin/products`);
       const data = await res.json();
       setProducts(data.products);
       setStats(data.stats);
@@ -110,6 +111,16 @@ export default function ProductsPage({ userId }: { userId: string }) {
     } catch (error) {
       console.error("Error deleting:", error);
     }
+  };
+
+  const handleEdit = (product: Product) => {
+    setEditProduct(product);
+    setShowAddModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowAddModal(false);
+    setEditProduct(null);
   };
 
   if (loading) {
@@ -265,7 +276,10 @@ export default function ProductsPage({ userId }: { userId: string }) {
                         Tandai Terjual
                       </button>
                     )}
-                    <button className="p-2 text-gray-600 hover:text-[#8C1007] border border-gray-300 rounded hover:border-[#8C1007] transition-colors">
+                    <button
+                      onClick={() => handleEdit(product)}
+                      className="p-2 text-gray-600 hover:text-[#8C1007] border border-gray-300 rounded hover:border-[#8C1007] transition-colors"
+                    >
                       <PencilIcon className="w-4 h-4" />
                     </button>
                     <button
@@ -282,22 +296,14 @@ export default function ProductsPage({ userId }: { userId: string }) {
         )}
       </div>
 
-      {/* Add Product Modal - Placeholder */}
-      {showAddModal && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg max-w-2xl w-full p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold">Tambah Produk Baru</h2>
-              <button onClick={() => setShowAddModal(false)}>
-                <XMarkIcon className="w-6 h-6 text-gray-500" />
-              </button>
-            </div>
-            <p className="text-gray-600">
-              Form tambah produk akan ada di sini...
-            </p>
-          </div>
-        </div>
-      )}
+      {/* Product Form Modal */}
+      <ProductFormModal
+        isOpen={showAddModal}
+        onClose={handleCloseModal}
+        onSuccess={fetchProducts}
+        userId={userId}
+        product={editProduct}
+      />
     </DashboardLayout>
   );
 }

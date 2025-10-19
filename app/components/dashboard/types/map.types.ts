@@ -48,6 +48,8 @@ export interface Pengrajin {
   whatsappNumber: string | null;
   yearsOfExperience: number | null;
   user: {
+    longitude: number | null;
+    latitude: number | null;
     id: string;
     name: string | null;
     email: string;
@@ -169,4 +171,34 @@ export interface Product {
   description?: string; // ✓ ada
   image?: string; // images[0] di schema
   price: number; // ✓ ada di schema
+}
+
+// Tambahkan di bagian bawah file
+export interface CraftProduct {
+  id: string;
+  title: string;
+  description: string;
+  price: number;
+  images: string[];
+  category: string;
+  materials: string[];
+  dimensions: string | null;
+  weight: number | null;
+  colors: string[];
+  customizable: boolean;
+  stock: number;
+  status: string;
+  tags: string[];
+  pengrajin: {
+    id: string;
+    workshopAddress: string | null;
+    workshopLatitude: number | null;
+    workshopLongitude: number | null;
+    user: {
+      id: string;
+      name: string | null;
+      email: string;
+      image: string | null;
+    };
+  };
 }
